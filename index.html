@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --font: "SF Pro Rounded","Fredoka","Baloo 2",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --font: "SF Pro Rounded", ui-rounded, "Fredoka","Baloo 2",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
   --cream:#FFF6EC;
   --cream2:#FFEBD7;
   --ink:#3B2415;
@@ -243,7 +243,9 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
   .hero-grid{grid-template-columns:1fr;text-align:center}
   .hero p.lead{margin-left:auto;margin-right:auto}
   .hero-cta,.hero-badges{justify-content:center}
-  .hero-stage{height:360px}
+  .hero-stage{height:auto;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-top:10px}
+  .hero-stage .float{position:static!important;width:42%!important;max-width:190px;margin:0!important}
+  .hero-stage .blob{display:none}
   .menu-grid{grid-template-columns:repeat(2,1fr)}
   .about{grid-template-columns:1fr;gap:30px}
   .about-art{height:340px;order:-1}
