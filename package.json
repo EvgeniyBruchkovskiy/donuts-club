@@ -12,7 +12,7 @@
     "shots": "playwright test e2e/screenshots.spec.ts",
     "shots:compare": "node e2e/compare.mjs",
     "test": "npm test -w web && npm test -w functions",
-    "lint": "npm run lint -w functions",
+    "lint": "npm run lint -w web && npm run lint -w functions",
     "check": "npm run lint && npm run typecheck && npm test"
   },
   "devDependencies": {
