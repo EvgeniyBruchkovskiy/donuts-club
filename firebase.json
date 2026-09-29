@@ -29,7 +29,28 @@
       }
     ]
   },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        "test",
+        "src",
+        "*.log",
+        "eslint.config.js",
+        "tsconfig*.json",
+        "vitest.config.*"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ],
   "firestore": {
+    "database": "(default)",
+    "location": "europe-central2",
     "rules": "firestore.rules"
   },
   "emulators": {
