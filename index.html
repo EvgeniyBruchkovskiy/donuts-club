@@ -344,6 +344,29 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
   .aut-tabs button{flex:0 0 auto;font-size:14px;padding:9px 15px}
   .leaf{opacity:.3}
 }
+
+/* ============ COLLAB ============ */
+.collab-card{position:relative;overflow:hidden;background:linear-gradient(135deg,#FFF 0%,#FFF1F6 55%,#FFE3EE 100%);border:1px solid #fff;border-radius:36px;padding:56px;box-shadow:0 30px 60px rgba(255,78,147,.16)}
+.collab-head{position:relative;z-index:2;max-width:780px}
+.collab-head .sec-sub{max-width:600px}
+.collab-head .sec-title{margin-top:14px}
+.collab-grid{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:36px}
+.cfeat{background:rgba(255,255,255,.88);border-radius:24px;padding:24px 22px;box-shadow:0 12px 26px rgba(210,120,80,.1);transition:transform .25s}
+.cfeat:hover{transform:translateY(-6px)}
+.cic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:26px;background:linear-gradient(135deg,#FFE0EC,#FFD0E1)}
+.cfeat h3{font-size:18px;font-weight:700;margin-top:14px;line-height:1.2}
+.cfeat p{font-size:14px;color:var(--ink-soft);margin-top:8px;line-height:1.45}
+.collab-steps{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:28px}
+.cstep{display:flex;align-items:center;gap:12px;background:#fff;border-radius:100px;padding:10px 20px 10px 10px;box-shadow:0 8px 18px rgba(255,78,147,.1);font-weight:600;font-size:15px}
+.cstep b{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#FF7FB0,#FF3F86);font-size:15px}
+.collab-cta{position:relative;z-index:2;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:32px}
+.collab-btn{background:linear-gradient(135deg,#F58529,#DD2A7B 55%,#8134AF);color:#fff;font-size:17px;padding:16px 28px;box-shadow:0 14px 30px rgba(221,42,123,.35)}
+.collab-handle{font-weight:700;color:var(--pink-d)}
+.collab-deco{position:absolute;z-index:1;pointer-events:none;filter:drop-shadow(0 18px 24px rgba(120,60,40,.2));animation:bob 6s ease-in-out infinite}
+.collab-deco.d1{width:230px;right:-30px;top:-20px;transform:rotate(12deg)}
+.collab-deco.d2{width:170px;right:150px;top:40px;opacity:.95;animation-delay:1.5s}
+@media(max-width:1100px){.collab-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.collab-deco.d2{display:none}.collab-steps{grid-template-columns:1fr}}
+@media(max-width:640px){.collab-card{padding:32px 20px;border-radius:28px}.collab-grid{grid-template-columns:1fr;gap:12px}.cfeat{display:grid;grid-template-columns:48px 1fr;column-gap:14px;align-items:start}.cfeat .cic{grid-row:span 2;width:48px;height:48px;font-size:24px}.cfeat h3{margin-top:2px}.cfeat p{margin-top:4px}.collab-steps{grid-template-columns:1fr;gap:10px}.collab-head .sec-title{font-size:34px}.cfeat{padding:18px 16px}.cfeat h3{font-size:16px}.cfeat p{font-size:13px}.collab-deco.d1{width:130px;right:-30px;top:-20px;opacity:.9}.cstep{font-size:14px}.collab-btn{width:100%;text-align:center}}
 </style>
 </head>
 <body>
@@ -356,6 +379,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
       <a href="#menu">Меню</a>
       <a href="#autumn">Осінь 🍂</a>
       <a href="#cinnamon">Сінамони</a>
+      <a href="#collab">Співпраця</a>
       <a href="#about">Про нас</a>
       <a href="#reviews">Відгуки</a>
       <a href="#delivery">Доставка</a>
@@ -436,6 +460,36 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
     <div class="cin-grid" id="cinSweet"></div>
     <h3 class="cat-title reveal">Солоні</h3>
     <div class="cin-grid two" id="cinSalty"></div>
+  </div>
+</section>
+
+<!-- COLLAB -->
+<section class="section collab" id="collab">
+  <div class="wrap">
+    <div class="collab-card reveal">
+      <div class="collab-head">
+        <span class="eyebrow">Для свят і бізнесу</span>
+        <h2 class="sec-title">Співпраця з нами 🤝</h2>
+        <p class="sec-sub">Готуємо не лише для вітрини. Кав'ярням, офісам, святам і подіям — зробимо саме те, що потрібно вам.</p>
+      </div>
+      <div class="collab-grid">
+        <div class="cfeat"><div class="cic">📦</div><h3>Будь-яка кількість</h3><p>Приймаємо передзамовлення на будь-який обсяг — від коробки до кількох сотень пончиків.</p></div>
+        <div class="cfeat"><div class="cic">🎂</div><h3>Торти на замовлення</h3><p>Святкові торти на день народження, весілля чи корпоратив — під ваш смак і дизайн.</p></div>
+        <div class="cfeat"><div class="cic">✨</div><h3>Індивідуальні замовлення</h3><p>Власна глазур, кольори, логотип, подарункові набори — втілимо вашу ідею.</p></div>
+        <div class="cfeat"><div class="cic">🤝</div><h3>Все за домовленістю</h3><p>Терміни, кількість, оформлення та ціну обговорюємо індивідуально.</p></div>
+      </div>
+      <div class="collab-steps">
+        <div class="cstep"><b>1</b><span>Напишіть нам в Instagram</span></div>
+        <div class="cstep"><b>2</b><span>Обговоримо деталі та терміни</span></div>
+        <div class="cstep"><b>3</b><span>Готуємо свіже до потрібної дати</span></div>
+      </div>
+      <div class="collab-cta">
+        <a href="https://ig.me/m/donuts_club_krop" target="_blank" rel="noopener" class="btn collab-btn">💌 Написати в Instagram</a>
+        <span class="collab-handle">@donuts_club_krop</span>
+      </div>
+      <img class="collab-deco d1" data-donut="STRAWBERRY" alt="" aria-hidden="true">
+      <img class="collab-deco d2" data-donut="MMS" alt="" aria-hidden="true">
+    </div>
   </div>
 </section>
 
@@ -541,6 +595,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
       <h4>Меню</h4>
       <a href="#menu">Пончики</a>
       <a href="#delivery">Доставка</a>
+      <a href="#collab">Співпраця</a>
       <a href="#reviews">Відгуки</a>
       <a href="#about">Про нас</a>
     </div>
