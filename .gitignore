@@ -1,0 +1,16 @@
+node_modules/
+dist/
+web/dist/
+functions/lib/
+.firebase/
+*.log
+.env
+.env.*
+!.env.example
+*.pem
+*-service-account*.json
+.runtimeconfig.json
+e2e/shots/
+test-results/
+playwright-report/
+.DS_Store
