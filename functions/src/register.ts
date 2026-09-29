@@ -1,5 +1,5 @@
 import { MSG, UserError } from "./errors.js";
-import { enforceRate, findClientByPhone, getMyLoyalty, type Deps, type LoyaltyResult } from "./loyalty.js";
+import { enforceRate, findClientByPhone, getMyLoyalty, safeWelcome, type Deps, type LoyaltyResult } from "./loyalty.js";
 import { toPosterPhone } from "./phone.js";
 import { PosterError } from "./poster/client.js";
 
@@ -59,6 +59,7 @@ export async function registerMe(uid: string, digits: string, raw: unknown, deps
   }
 
   await deps.store.setProfile(uid, { posterClientId: clientId, source: created ? "created" : "linked", createdAt: now });
+  if (!created) await safeWelcome(uid, clientId, "linked", deps); // created ones got Poster's own welcome bonus
   await deps.store.clearCache(uid);
   deps.log("info", created ? "poster client created" : "poster client linked", { clientId });
   return { created, loyalty: await getMyLoyalty(uid, digits, deps) };

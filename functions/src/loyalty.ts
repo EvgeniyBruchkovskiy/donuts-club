@@ -1,7 +1,8 @@
 import { UserError, MSG } from "./errors.js";
 import { maskPhone } from "./phone.js";
 import type { PosterApi, PosterClientRecord, PosterTransaction } from "./poster/types.js";
-import { rateStep, type Store } from "./store.js";
+import { maybeWelcome } from "./bonus/welcome.js";
+import { rateStep, type Profile, type Store } from "./store.js";
 
 export const CACHE_TTL_MS = 60_000;
 export const HISTORY_DAYS = 90;
@@ -34,7 +35,7 @@ export interface Deps {
   poster: PosterApi;
   store: Store;
   now: () => Date;
-  log: (level: "info" | "warn", message: string, data: Record<string, unknown>) => void;
+  log: (level: "info" | "warn" | "error", message: string, data: Record<string, unknown>) => void;
 }
 
 const kop = (v: string | undefined) => Number(v ?? 0) || 0;
@@ -88,14 +89,24 @@ export async function enforceRate(store: Store, uid: string, kind: keyof typeof 
 }
 
 /** Resolves the Poster client for a verified phone: stored link first (re-checked), then search. */
-export async function resolveClient(uid: string, digits: string, deps: Deps): Promise<PosterClientRecord | null> {
+export async function resolveClient(uid: string, digits: string, deps: Deps): Promise<{ client: PosterClientRecord | null; profile: Profile | null }> {
   const profile = await deps.store.getProfile(uid);
   if (profile) {
     const c = await deps.poster.getClient(profile.posterClientId);
-    if (c && c.phone_number === digits && c.delete !== "1") return c;
+    if (c && c.phone_number === digits && c.delete !== "1") return { client: c, profile };
     deps.log("warn", "stored poster link is stale", { clientId: profile.posterClientId });
   }
-  return findClientByPhone(deps.poster, digits, deps);
+  return { client: await findClientByPhone(deps.poster, digits, deps), profile };
+}
+
+/** Bonus rules must never break the cabinet: failures are logged, the page still loads. */
+export async function safeWelcome(uid: string, clientId: number, source: Profile["source"], deps: Deps): Promise<boolean> {
+  try {
+    return (await maybeWelcome(uid, clientId, source, deps)) === "awarded";
+  } catch (err) {
+    deps.log("error", "welcome bonus failed", { clientId, error: err instanceof Error ? err.name : "unknown" });
+    return false;
+  }
 }
 
 export async function getMyLoyalty(uid: string, digits: string, deps: Deps): Promise<LoyaltyResult> {
@@ -105,9 +116,17 @@ export async function getMyLoyalty(uid: string, digits: string, deps: Deps): Pro
   const cached = await deps.store.getCache<LoyaltyResult>(uid);
   if (cached && now.getTime() - cached.storedAt.getTime() < CACHE_TTL_MS) return cached.data;
 
-  const client = await resolveClient(uid, digits, deps);
+  const resolved = await resolveClient(uid, digits, deps);
+  let client = resolved.client;
+  const profile = resolved.profile;
   let result: LoyaltyResult = { exists: false };
   if (client) {
+    const clientId = Number(client.client_id);
+    if (!profile || profile.posterClientId !== clientId) {
+      // First login of an existing Poster client (or a re-link): remember uid → client_id.
+      await deps.store.setProfile(uid, { posterClientId: clientId, source: profile?.source ?? "linked", createdAt: profile?.createdAt ?? now });
+      if (!profile && (await safeWelcome(uid, clientId, "linked", deps))) client = (await deps.poster.getClient(clientId)) ?? client;
+    }
     const from = kyivYmd(new Date(now.getTime() - HISTORY_DAYS * 86_400_000));
     const tx = await deps.poster.getClientTransactions(Number(client.client_id), from, kyivYmd(now));
     result = toLoyalty(client, tx);
