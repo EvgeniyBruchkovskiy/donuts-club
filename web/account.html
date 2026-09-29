@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Мій кабінет — DONUTS CLUB</title>
+<meta name="robots" content="noindex" />
+<meta name="description" content="Бонуси DONUTS CLUB: баланс, історія покупок і картка клубу." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script type="module" src="/src/account/main.ts"></script>
+</head>
+<body class="acc-page">
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="/"><img class="logo logo-full" src="/img/logofull.webp" width="483" height="520" alt="DONUTS CLUB"><span class="wm-wrap"><span class="wm">DONUTS<b> CLUB</b></span><small class="brand-sub">Кропивницький</small></span></a>
+    <a href="/" class="acc-back">← На сайт</a>
+  </div>
+</header>
+
+<main class="acc">
+  <!-- loading -->
+  <section class="acc-card acc-center" data-state="loading">
+    <div class="acc-spinner" aria-hidden="true">🍩</div>
+    <p class="acc-muted">Завантаження…</p>
+  </section>
+
+  <!-- step 1: phone -->
+  <section class="acc-card" data-state="phone" hidden>
+    <span class="eyebrow">Клуб DONUTS</span>
+    <h1 class="acc-title">Вхід до кабінету</h1>
+    <p class="acc-sub">Введіть номер телефону — надішлемо SMS з кодом. Бонуси, знижка та історія покупок — в одному місці.</p>
+    <form id="phoneForm" class="acc-form" novalidate>
+      <label class="acc-label" for="phoneInput">Номер телефону</label>
+      <input id="phoneInput" class="acc-input acc-phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="+380 (__) ___ __ __" />
+      <p id="phoneError" class="acc-error" role="alert" hidden></p>
+      <button id="sendCode" class="btn btn-primary acc-btn" type="submit" disabled>Отримати код</button>
+    </form>
+    <p class="acc-fine">Захищено reCAPTCHA. Надсилаємо SMS лише на українські номери.</p>
+  </section>
+
+  <!-- step 2: SMS code -->
+  <section class="acc-card" data-state="code" hidden>
+    <span class="eyebrow">Крок 2 з 2</span>
+    <h1 class="acc-title">Введіть код</h1>
+    <p class="acc-sub">Ми надіслали SMS на <b id="codePhone" class="nw"></b>. <button id="changePhone" class="acc-link" type="button">Змінити номер</button></p>
+    <form id="codeForm" class="acc-form" novalidate>
+      <label class="acc-label" for="codeInput">Код з SMS</label>
+      <input id="codeInput" class="acc-input acc-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" />
+      <p id="codeError" class="acc-error" role="alert" hidden></p>
+      <button id="verifyCode" class="btn btn-primary acc-btn" type="submit">Увійти</button>
+      <button id="resendCode" class="acc-link acc-resend" type="button" disabled></button>
+    </form>
+  </section>
+
+  <!-- not a Poster client yet -->
+  <section class="acc-card" data-state="join" hidden>
+    <span class="eyebrow">Бонусна програма</span>
+    <h1 class="acc-title">Стати учасником клубу</h1>
+    <p class="acc-sub">Вас ще немає в нашій програмі лояльності. Заповніть два поля — і накопичуйте бонуси з кожної покупки.</p>
+    <form id="joinForm" class="acc-form" novalidate>
+      <label class="acc-label" for="joinName">Ім'я</label>
+      <input id="joinName" class="acc-input" type="text" autocomplete="given-name" maxlength="50" placeholder="Як до вас звертатися?" required />
+      <label class="acc-label" for="joinBirthday">Дата народження <span class="acc-muted">(необов'язково)</span></label>
+      <input id="joinBirthday" class="acc-input" type="date" min="1920-01-01" autocomplete="bday" />
+      <p class="acc-fine acc-hint">🎂 Щоб привітати вас бонусами в день народження.</p>
+      <p id="joinError" class="acc-error" role="alert" hidden></p>
+      <button id="joinSubmit" class="btn btn-primary acc-btn" type="submit">Приєднатися до клубу</button>
+    </form>
+  </section>
+
+  <!-- cabinet -->
+  <div class="acc-stack" data-state="cabinet" hidden>
+    <section class="acc-card acc-balance">
+      <p id="cabHello" class="acc-hello"></p>
+      <p class="acc-bonus-label">Бонусів на рахунку</p>
+      <p id="cabBonus" class="acc-bonus"></p>
+      <p id="cabProgram" class="acc-program"></p>
+      <span id="cabGroup" class="acc-chip"></span>
+    </section>
+
+    <section class="acc-card acc-center acc-pass">
+      <h2 class="acc-h2">Картка клубу</h2>
+      <p class="acc-muted">Покажіть на касі — бонуси нарахуються автоматично</p>
+      <canvas id="cabQr" class="acc-qr" width="200" height="200" aria-label="QR-код з номером телефону"></canvas>
+      <p id="cabPhone" class="acc-phone-big"></p>
+    </section>
+
+    <section class="acc-card">
+      <h2 class="acc-h2">Останні покупки</h2>
+      <ul id="cabHistory" class="acc-history"></ul>
+      <p id="cabEmpty" class="acc-muted" hidden>За останні 90 днів покупок ще немає. Чекаємо на каву з пончиком 🍩</p>
+      <p class="acc-total">Усього покупок: <b id="cabTotal"></b></p>
+    </section>
+
+    <button id="logout" class="btn btn-ghost acc-btn acc-logout" type="button">Вийти</button>
+  </div>
+
+  <!-- error while loading -->
+  <section class="acc-card acc-center" data-state="failed" hidden>
+    <div class="acc-spinner acc-still" aria-hidden="true">😕</div>
+    <p id="failedText" class="acc-error" role="alert"></p>
+    <button id="retry" class="btn btn-primary acc-btn" type="button">Спробувати ще раз</button>
+    <button id="failedLogout" class="acc-link" type="button">Вийти</button>
+  </section>
+
+  <div id="recaptcha"></div>
+</main>
+</body>
+</html>

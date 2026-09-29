@@ -1,0 +1,59 @@
+/* "Мій кабінет" — mobile-first, same tokens/cards as the landing (main.css). */
+.acc-page header .brand{color:inherit}
+.acc-back{font-weight:700;font-size:15px;color:var(--pink-d);background:#fff;padding:10px 16px;border-radius:100px;box-shadow:0 6px 18px rgba(255,78,147,.16);white-space:nowrap}
+.acc{max-width:460px;margin:0 auto;padding:22px 16px 56px;min-height:calc(100vh - 71px)}
+.acc-stack{display:flex;flex-direction:column;gap:16px}
+.acc-card{background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.95);border-radius:28px;padding:26px 22px;
+  box-shadow:0 14px 30px rgba(210,120,80,.12);backdrop-filter:blur(4px)}
+.acc-center{text-align:center}
+.acc-title{font-size:30px;font-weight:700;line-height:1.1;margin:14px 0 10px}
+.acc-sub{color:var(--ink-soft);font-size:16px;line-height:1.5}
+.acc-h2{font-size:20px;font-weight:700;margin-bottom:6px}
+.acc-muted{color:var(--ink-soft);font-size:14px;line-height:1.45}
+.acc-fine{color:var(--ink-soft);font-size:12.5px;line-height:1.4;margin-top:14px;opacity:.85}
+.acc-hint{margin-top:-4px}
+
+.acc-form{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.acc-label{font-weight:700;font-size:14px;margin-top:4px}
+.acc-input{width:100%;font:inherit;font-size:18px;font-weight:600;color:var(--ink);background:#fff;border:2px solid #FFD6E6;border-radius:16px;padding:14px 16px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;min-height:54px}
+.acc-input:focus{border-color:var(--pink);box-shadow:0 0 0 4px rgba(255,111,166,.18)}
+.acc-input::placeholder{color:#C9A99A;font-weight:500}
+.acc-phone{font-size:20px;letter-spacing:.5px}
+.acc-code{font-size:28px;letter-spacing:10px;text-align:center}
+.acc-btn{width:100%;margin-top:8px}
+.acc-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.acc-btn.is-busy{opacity:.75;cursor:progress}
+.acc-btn.is-busy::after{content:"";width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:accspin .8s linear infinite}
+.acc-link{font:inherit;font-weight:700;color:var(--pink-d);background:none;border:none;padding:6px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.acc-link:disabled{color:var(--ink-soft);text-decoration:none;cursor:default;font-weight:600}
+.acc-resend{align-self:center;font-size:14px}
+.acc-error{color:#C62D5C;background:#FFE8EF;border-radius:12px;padding:10px 14px;font-weight:600;font-size:14px;line-height:1.4}
+
+.acc-spinner{font-size:46px;display:inline-block;animation:accspin 1.4s linear infinite;margin:6px 0 10px}
+.acc-still{animation:none}
+@keyframes accspin{to{transform:rotate(360deg)}}
+
+.acc-balance{background:linear-gradient(135deg,#FF7FB0,#FF3F86);color:#fff;border:none;box-shadow:0 20px 40px rgba(255,63,134,.34);text-align:center}
+.acc-hello{font-weight:700;font-size:18px;opacity:.95}
+.acc-bonus-label{margin-top:14px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.85}
+.acc-bonus{font-size:clamp(46px,14vw,60px);font-weight:800;line-height:1.05;margin:4px 0 8px;white-space:nowrap}
+.acc-program{font-size:15px;opacity:.95;line-height:1.4}
+.acc-chip{display:inline-block;margin-top:12px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4);padding:6px 14px;border-radius:100px;font-weight:700;font-size:13px}
+
+.acc-qr{display:block;width:200px;height:200px;margin:16px auto 10px;border-radius:14px;background:#fff;box-shadow:0 8px 18px rgba(120,60,40,.1)}
+.acc-phone-big{font-size:24px;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+
+.acc-history{list-style:none;margin-top:10px}
+.acc-history li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-bottom:1px dashed rgba(255,111,166,.3)}
+.acc-history li:last-child{border-bottom:none}
+.h-date{font-size:14px;color:var(--ink-soft)}
+.h-sum{font-size:16px;font-weight:800;color:var(--ink);text-align:right}
+.h-bonus{grid-column:1/-1;font-size:12.5px;color:var(--pink-d);font-weight:700}
+.acc-total{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,111,166,.18);font-size:14px;color:var(--ink-soft)}
+.acc-total b{color:var(--ink)}
+.acc-logout{margin-top:4px}
+
+[hidden]{display:none!important}
+@media(min-width:640px){.acc{padding-top:44px}.acc-card{padding:32px 30px}.acc-title{font-size:34px}}
+@media(max-width:370px){.acc-card{padding:22px 16px}.acc-title{font-size:26px}.acc-phone-big{font-size:20px}}
+@media (prefers-reduced-motion:reduce){.acc-spinner,.acc-btn.is-busy::after{animation:none}}
