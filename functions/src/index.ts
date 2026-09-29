@@ -2,6 +2,7 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { setGlobalOptions } from "firebase-functions/v2";
 import { HttpsError, onCall, type CallableRequest } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import { defineSecret } from "firebase-functions/params";
 import { MSG, UserError } from "./errors.js";
@@ -9,6 +10,7 @@ import { FirestoreStore } from "./firestoreStore.js";
 import { getMyLoyalty as getMyLoyaltyImpl, type Deps } from "./loyalty.js";
 import { normalizePhone } from "./phone.js";
 import { PosterClient, PosterError } from "./poster/client.js";
+import { runBirthdayBonuses } from "./bonus/birthday.js";
 import { registerMe as registerMeImpl } from "./register.js";
 
 initializeApp();
@@ -81,4 +83,15 @@ export const registerMe = onCall(callableOpts, (req) =>
     const { uid, digits } = caller(req);
     return registerMeImpl(uid, digits, req.data, deps());
   }),
+);
+
+/**
+ * Daily at 09:00 Kyiv: birthday rule from config/bonusRules (disabled by default).
+ * No client-callable way to credit bonuses exists — only this job and the welcome rule inside callables.
+ */
+export const birthdayBonuses = onSchedule(
+  { schedule: "0 9 * * *", timeZone: "Europe/Kyiv", secrets: [POSTER_TOKEN], memory: "256MiB", timeoutSeconds: 300, retryCount: 0 },
+  async () => {
+    await runBirthdayBonuses(deps());
+  },
 );
