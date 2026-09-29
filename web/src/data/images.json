@@ -1,0 +1,292 @@
+{
+  "TEA": {
+    "src": "/img/tea.webp",
+    "w": 460,
+    "h": 332
+  },
+  "M_PINK": {
+    "src": "/img/m_pink.webp",
+    "w": 460,
+    "h": 387
+  },
+  "M_ORANGE": {
+    "src": "/img/m_orange.webp",
+    "w": 460,
+    "h": 353
+  },
+  "M_LAV": {
+    "src": "/img/m_lav.webp",
+    "w": 460,
+    "h": 347
+  },
+  "M_CLASSIC": {
+    "src": "/img/m_classic.webp",
+    "w": 460,
+    "h": 337
+  },
+  "HOTCHOC": {
+    "src": "/img/hotchoc.webp",
+    "w": 429,
+    "h": 381
+  },
+  "GL_SEABUCK": {
+    "src": "/img/gl_seabuck.webp",
+    "w": 460,
+    "h": 395
+  },
+  "GL_MANGO": {
+    "src": "/img/gl_mango.webp",
+    "w": 352,
+    "h": 378
+  },
+  "GL_CITRUS": {
+    "src": "/img/gl_citrus.webp",
+    "w": 443,
+    "h": 439
+  },
+  "GL_CHERRY": {
+    "src": "/img/gl_cherry.webp",
+    "w": 460,
+    "h": 375
+  },
+  "DONUT_STRAWBERRY": {
+    "src": "/img/donut_strawberry.webp",
+    "w": 507,
+    "h": 315
+  },
+  "DONUT_SALTCARAMEL": {
+    "src": "/img/donut_saltcaramel.webp",
+    "w": 560,
+    "h": 369
+  },
+  "CIN_APPLE": {
+    "src": "/img/cin_apple.webp",
+    "w": 427,
+    "h": 347
+  },
+  "A_WHITEMOCHA": {
+    "src": "/img/a_whitemocha.webp",
+    "w": 310,
+    "h": 460
+  },
+  "A_TIRAMISU": {
+    "src": "/img/a_tiramisu.webp",
+    "w": 344,
+    "h": 460
+  },
+  "A_RAF_RASP": {
+    "src": "/img/a_raf_rasp.webp",
+    "w": 414,
+    "h": 298
+  },
+  "A_RAF_LAV": {
+    "src": "/img/a_raf_lav.webp",
+    "w": 402,
+    "h": 285
+  },
+  "A_PUMPKIN": {
+    "src": "/img/a_pumpkin.webp",
+    "w": 319,
+    "h": 460
+  },
+  "A_NUTCAPP": {
+    "src": "/img/a_nutcapp.webp",
+    "w": 206,
+    "h": 270
+  },
+  "A_MASALA": {
+    "src": "/img/a_masala.webp",
+    "w": 460,
+    "h": 459
+  },
+  "A_CARLATTE": {
+    "src": "/img/a_carlatte.webp",
+    "w": 305,
+    "h": 460
+  },
+  "A_AUTCREAM": {
+    "src": "/img/a_autcream.webp",
+    "w": 327,
+    "h": 459
+  },
+  "AMK_VAN": {
+    "src": "/img/amk_van.webp",
+    "w": 337,
+    "h": 460
+  },
+  "AMK_STRAW": {
+    "src": "/img/amk_straw.webp",
+    "w": 351,
+    "h": 460
+  },
+  "AMK_CHOC": {
+    "src": "/img/amk_choc.webp",
+    "w": 374,
+    "h": 460
+  },
+  "AMK_CAR": {
+    "src": "/img/amk_car.webp",
+    "w": 359,
+    "h": 460
+  },
+  "ABT_STRAWVAN": {
+    "src": "/img/abt_strawvan.webp",
+    "w": 293,
+    "h": 460
+  },
+  "ABT_STRAWBLACK": {
+    "src": "/img/abt_strawblack.webp",
+    "w": 314,
+    "h": 460
+  },
+  "ABT_SALTCAR": {
+    "src": "/img/abt_saltcar.webp",
+    "w": 321,
+    "h": 460
+  },
+  "ABT_CINVAN": {
+    "src": "/img/abt_cinvan.webp",
+    "w": 300,
+    "h": 460
+  },
+  "ABT_CHWHITE": {
+    "src": "/img/abt_chwhite.webp",
+    "w": 291,
+    "h": 460
+  },
+  "ABT_CHERRY": {
+    "src": "/img/abt_cherry.webp",
+    "w": 290,
+    "h": 460
+  },
+  "ABT_BROWN": {
+    "src": "/img/abt_brown.webp",
+    "w": 344,
+    "h": 460
+  },
+  "ABT_APPLE": {
+    "src": "/img/abt_apple.webp",
+    "w": 307,
+    "h": 460
+  },
+  "CIN_PISTACHIO": {
+    "src": "/img/cin_pistachio.webp",
+    "w": 452,
+    "h": 434
+  },
+  "CIN_CHERRYCHOC": {
+    "src": "/img/cin_cherrychoc.webp",
+    "w": 460,
+    "h": 437
+  },
+  "CIN_CHEESE": {
+    "src": "/img/cin_cheese.webp",
+    "w": 460,
+    "h": 385
+  },
+  "CIN_CLASSIC": {
+    "src": "/img/cin_classic.webp",
+    "w": 460,
+    "h": 424
+  },
+  "CIN_MEAT": {
+    "src": "/img/cin_meat.webp",
+    "w": 460,
+    "h": 350
+  },
+  "CIN_CARAMEL": {
+    "src": "/img/cin_caramel.webp",
+    "w": 460,
+    "h": 418
+  },
+  "LOGOFULL": {
+    "src": "/img/logofull.webp",
+    "w": 483,
+    "h": 520
+  },
+  "LOGO": {
+    "src": "/img/logo.svg",
+    "w": 200,
+    "h": 200
+  },
+  "RAINBOW": {
+    "src": "/img/rainbow.webp",
+    "w": 560,
+    "h": 385
+  },
+  "STRAWBERRY": {
+    "src": "/img/strawberry.webp",
+    "w": 560,
+    "h": 504
+  },
+  "CAPPUCINO": {
+    "src": "/img/cappucino.webp",
+    "w": 506,
+    "h": 560
+  },
+  "NUT": {
+    "src": "/img/nut.webp",
+    "w": 560,
+    "h": 429
+  },
+  "BANANA": {
+    "src": "/img/banana.webp",
+    "w": 560,
+    "h": 445
+  },
+  "DONMELON": {
+    "src": "/img/donmelon.webp",
+    "w": 560,
+    "h": 524
+  },
+  "PINEAPPLE": {
+    "src": "/img/pineapple.webp",
+    "w": 560,
+    "h": 396
+  },
+  "COCO": {
+    "src": "/img/coco.webp",
+    "w": 560,
+    "h": 427
+  },
+  "DON_LIMON": {
+    "src": "/img/don_limon.webp",
+    "w": 560,
+    "h": 432
+  },
+  "BLUE_BEACH": {
+    "src": "/img/blue_beach.webp",
+    "w": 560,
+    "h": 436
+  },
+  "MARSHMALLOW": {
+    "src": "/img/marshmallow.webp",
+    "w": 560,
+    "h": 437
+  },
+  "OREO": {
+    "src": "/img/oreo.webp",
+    "w": 560,
+    "h": 442
+  },
+  "ALMONT": {
+    "src": "/img/almont.webp",
+    "w": 560,
+    "h": 458
+  },
+  "CHOCO": {
+    "src": "/img/choco.webp",
+    "w": 560,
+    "h": 444
+  },
+  "BLUEBERRY": {
+    "src": "/img/blueberry.webp",
+    "w": 560,
+    "h": 462
+  },
+  "MMS": {
+    "src": "/img/mms.webp",
+    "w": 560,
+    "h": 397
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "sweet": [
+    {
+      "n": "Класичний",
+      "img": "CIN_CLASSIC",
+      "price": "89"
+    },
+    {
+      "n": "Карамельний",
+      "img": "CIN_CARAMEL",
+      "price": "89"
+    },
+    {
+      "n": "Вишня-шоколад",
+      "img": "CIN_CHERRYCHOC",
+      "price": "95"
+    },
+    {
+      "n": "Фісташковий",
+      "img": "CIN_PISTACHIO",
+      "price": "119"
+    },
+    {
+      "n": "Яблуко-кориця",
+      "img": "CIN_APPLE",
+      "price": "89",
+      "tag": "Осінь"
+    }
+  ],
+  "salty": [
+    {
+      "n": "М'ясний",
+      "img": "CIN_MEAT",
+      "price": "89"
+    },
+    {
+      "n": "Сирний",
+      "img": "CIN_CHEESE",
+      "price": "89"
+    }
+  ]
+}
