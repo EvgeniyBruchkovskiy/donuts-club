@@ -1,5 +1,6 @@
 import "./styles/main.css";
 import "./styles/images.css";
+import "./styles/nav-login.css";
 import { initReveal } from "./lib/reveal";
 import { renderAutumn } from "./sections/autumn";
 import { renderCinnamon } from "./sections/cinnamon";

@@ -1,0 +1,8 @@
+/* «Увійти» → /account. Desktop: text link next to «Замовити»; mobile: item in the ☰ menu
+   (desktop hides it via the existing "only Меню · Співпраця · Де ми" rule). */
+.nav-cta .nav-login{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:16px;opacity:.82;transition:.2s;white-space:nowrap;margin-right:6px}
+.nav-cta .nav-login::before{content:"";width:18px;height:18px;flex:none;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.2-8 5v1.5c0 .8.7 1.5 1.5 1.5h13c.8 0 1.5-.7 1.5-1.5V19c0-2.8-3.6-5-8-5Z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.2-8 5v1.5c0 .8.7 1.5 1.5 1.5h13c.8 0 1.5-.7 1.5-1.5V19c0-2.8-3.6-5-8-5Z'/%3E%3C/svg%3E") center/contain no-repeat}
+.nav-cta .nav-login:hover{opacity:1;color:var(--pink-d)}
+.nav-links .nav-login-m{font-weight:700;color:var(--pink-d)}
