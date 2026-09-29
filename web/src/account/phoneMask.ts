@@ -10,11 +10,14 @@ export function nationalDigits(raw: string): string {
   return d.slice(0, NATIONAL_LEN);
 }
 
-/** "991234567" → "+380 (99) 123 45 67"; partial input formats progressively. */
-export function formatMasked(national: string): string {
+/**
+ * National part as shown in the input (the "+380" prefix is a fixed label outside it,
+ * so the field never re-reads its own country code): "991234567" → "(99) 123 45 67".
+ */
+export function formatNational(national: string): string {
   const d = national;
-  let out = "+380";
-  if (d.length > 0) out += " (" + d.slice(0, 2);
+  let out = "";
+  if (d.length > 0) out += "(" + d.slice(0, 2);
   if (d.length >= 2) out += ")";
   if (d.length > 2) out += " " + d.slice(2, 5);
   if (d.length > 5) out += " " + d.slice(5, 7);
@@ -22,7 +25,12 @@ export function formatMasked(national: string): string {
   return out;
 }
 
-export const PLACEHOLDER = "+380 (__) ___ __ __";
+/** "991234567" → "+380 (99) 123 45 67". */
+export function formatMasked(national: string): string {
+  return national ? "+380 " + formatNational(national) : "+380";
+}
+
+export const PLACEHOLDER = "(__) ___ __ __";
 
 export function isComplete(national: string): boolean {
   return /^[1-9]\d{8}$/.test(national);

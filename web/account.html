@@ -33,7 +33,10 @@
     <p class="acc-sub">Введіть номер телефону — надішлемо SMS з кодом. Бонуси, знижка та історія покупок — в одному місці.</p>
     <form id="phoneForm" class="acc-form" novalidate>
       <label class="acc-label" for="phoneInput">Номер телефону</label>
-      <input id="phoneInput" class="acc-input acc-phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="+380 (__) ___ __ __" />
+      <div class="acc-phone-wrap">
+        <span class="acc-prefix" aria-hidden="true">+380</span>
+        <input id="phoneInput" class="acc-input acc-phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(__) ___ __ __" aria-label="Номер телефону після +380" />
+      </div>
       <p id="phoneError" class="acc-error" role="alert" hidden></p>
       <button id="sendCode" class="btn btn-primary acc-btn" type="submit" disabled>Отримати код</button>
     </form>
@@ -42,7 +45,7 @@
 
   <!-- step 2: SMS code -->
   <section class="acc-card" data-state="code" hidden>
-    <span class="eyebrow">Крок 2 з 2</span>
+    <span class="eyebrow">Майже готово</span>
     <h1 class="acc-title">Введіть код</h1>
     <p class="acc-sub">Ми надіслали SMS на <b id="codePhone" class="nw"></b>. <button id="changePhone" class="acc-link" type="button">Змінити номер</button></p>
     <form id="codeForm" class="acc-form" novalidate>

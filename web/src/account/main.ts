@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { errorMessage } from "./errors";
 import { api, auth } from "./firebase";
 import { firstName, prettyPhone, purchaseDate, uah } from "./format";
-import { formatMasked, isComplete, nationalDigits, toE164 } from "./phoneMask";
+import { formatMasked, formatNational, isComplete, nationalDigits, toE164 } from "./phoneMask";
 import type { Loyalty } from "./types";
 
 const RESEND_SECONDS = 60;
@@ -36,7 +36,7 @@ const sendBtn = $<HTMLButtonElement>("sendCode");
 let national = "";
 
 function renderPhone() {
-  phoneInput.value = national ? formatMasked(national) : "";
+  phoneInput.value = formatNational(national);
   sendBtn.disabled = !isComplete(national);
 }
 
@@ -159,8 +159,7 @@ $("joinForm").addEventListener("submit", async (e) => {
 });
 
 /* ---------- cabinet ---------- */
-async function renderCabinet(l: Loyalty) {
-  const phone = auth.currentUser?.phoneNumber ?? "";
+async function renderCabinet(l: Loyalty, phone = auth.currentUser?.phoneNumber ?? "") {
   const name = firstName(l.name);
   $("cabHello").textContent = name ? `Привіт, ${name}!` : "Привіт!";
   $("cabBonus").textContent = uah(l.bonusUah);
@@ -226,3 +225,8 @@ onAuthStateChanged(auth, (user) => {
     void loadCabinet();
   }
 });
+
+// Dev-only hook for visual checks of every screen (stripped from production builds).
+if (import.meta.env.DEV) {
+  Object.assign(window, { __account: { show, renderCabinet, setError } });
+}

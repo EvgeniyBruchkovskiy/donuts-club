@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { errorMessage } from "../src/account/errors";
 import { firstName, prettyPhone, purchaseDate, uah } from "../src/account/format";
-import { formatMasked, isComplete, nationalDigits, toE164 } from "../src/account/phoneMask";
+import { formatMasked, formatNational, isComplete, nationalDigits, toE164 } from "../src/account/phoneMask";
 
 describe("phone mask", () => {
   it.each([
@@ -15,23 +15,25 @@ describe("phone mask", () => {
     ["99123456789", "991234567"], // extra digits dropped
   ])("nationalDigits(%j) = %j", (raw, expected) => expect(nationalDigits(raw)).toBe(expected));
 
-  it("never re-reads its own +380 prefix as input", () => {
+  it.each(["991234567", "0991234567", "+380991234567", "380991234567"])("typing %j key by key into the field yields 991234567", (typed) => {
     let n = "";
-    for (const ch of "991234567") n = nationalDigits(formatMasked(n) + ch);
+    for (const ch of typed) n = nationalDigits(formatNational(n) + ch); // what the input holds after each key
     expect(n).toBe("991234567");
   });
 
   it.each([
-    ["", "+380"],
-    ["9", "+380 (9"],
-    ["99", "+380 (99)"],
-    ["991", "+380 (99) 1"],
-    ["99123", "+380 (99) 123"],
-    ["991234", "+380 (99) 123 4"],
-    ["9912345", "+380 (99) 123 45"],
-    ["99123456", "+380 (99) 123 45 6"],
-    ["991234567", "+380 (99) 123 45 67"],
-  ])("formatMasked(%j)", (d, expected) => expect(formatMasked(d)).toBe(expected));
+    ["", ""],
+    ["9", "(9"],
+    ["99", "(99)"],
+    ["991", "(99) 1"],
+    ["99123", "(99) 123"],
+    ["991234", "(99) 123 4"],
+    ["9912345", "(99) 123 45"],
+    ["99123456", "(99) 123 45 6"],
+    ["991234567", "(99) 123 45 67"],
+  ])("formatNational(%j)", (d, expected) => expect(formatNational(d)).toBe(expected));
+
+  it("formatMasked adds the country code", () => expect(formatMasked("991234567")).toBe("+380 (99) 123 45 67"));
 
   it("completeness and E.164", () => {
     expect(isComplete("991234567")).toBe(true);
