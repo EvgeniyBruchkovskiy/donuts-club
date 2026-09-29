@@ -437,6 +437,15 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
   .aut-tabs{padding:12px 16px 20px;margin:12px -16px -8px}
   .aut-tabs button.on{box-shadow:0 6px 14px rgba(222,91,36,.28)}
 }
+
+/* desktop: short nav — Меню · Співпраця · Де ми */
+@media(min-width:961px){
+  header .nav-links{gap:34px;font-size:16px}
+  header .nav-links a{display:none}
+  header .nav-links a[href="#menu"],header .nav-links a[href="#collab"],header .nav-links a[href="#location"]{display:inline-block}
+  header .nav-cta .btn-ghost{display:none}
+  header .brand .brand-sub{display:block}
+}
 </style>
 </head>
 <body>
