@@ -1,6 +1,6 @@
 import type { Deps } from "../src/loyalty.js";
 import type { CreateClientInput, PosterApi, PosterClientRecord, PosterTransaction } from "../src/poster/types.js";
-import type { CacheEntry, Profile, RateWindow, Store } from "../src/store.js";
+import { canClaim, type CacheEntry, type LedgerEntry, type LedgerOutcome, type LedgerStatus, type Profile, type RateWindow, type Store } from "../src/store.js";
 
 export function client(over: Partial<PosterClientRecord> = {}): PosterClientRecord {
   return {
@@ -34,6 +34,8 @@ export class FakePoster implements PosterApi {
   calls: string[] = [];
   created: CreateClientInput[] = [];
   failCreateWith?: Error;
+  bonusChanges: { clientId: number; amountUah: number }[] = [];
+  failBonusWith?: Error;
 
   async findClientsByPhone(phone: string) {
     this.calls.push("getClients");
@@ -52,8 +54,17 @@ export class FakePoster implements PosterApi {
     this.clients.push(client({ client_id: id, lastname: input.client_name, phone_number: input.phone.replace(/\D/g, ""), bonus: "5000", total_payed_sum: "0" }));
     return Number(id);
   }
-  async changeClientBonus(): Promise<number> {
-    throw new Error("not used");
+  async findClientsByBirthday(mmdd: string) {
+    this.calls.push("getClientsByBirthday");
+    return this.clients.filter((c) => c.birthday.slice(5).replace("-", "") === mmdd);
+  }
+  async changeClientBonus(clientId: number, amountUah: number): Promise<number> {
+    this.calls.push("changeClientBonus");
+    if (this.failBonusWith) throw this.failBonusWith;
+    this.bonusChanges.push({ clientId, amountUah });
+    const c = this.clients.find((x) => x.client_id === String(clientId))!;
+    c.bonus = String(Number(c.bonus) + amountUah * 100);
+    return Number(c.bonus) / 100;
   }
   async getClientTransactions(id: number) {
     this.calls.push("getTransactions");
@@ -65,6 +76,24 @@ export class MemoryStore implements Store {
   profiles = new Map<string, Profile>();
   cache = new Map<string, CacheEntry<unknown>>();
   windows = new Map<string, RateWindow>();
+  rulesRaw: unknown = null;
+  ledger = new Map<string, LedgerEntry & Omit<Partial<LedgerOutcome>, "status"> & { status: LedgerStatus; attempts: number }>();
+  async getBonusRulesRaw() {
+    return this.rulesRaw;
+  }
+  async claimLedger(key: string, entry: LedgerEntry) {
+    const prev = this.ledger.get(key);
+    if (!canClaim(prev?.status ?? null)) return false;
+    this.ledger.set(key, { ...entry, status: "pending", attempts: (prev?.attempts ?? 0) + 1 });
+    return true;
+  }
+  async finishLedger(key: string, o: LedgerOutcome) {
+    this.ledger.set(key, { ...this.ledger.get(key)!, ...o });
+  }
+  async findUidByClientId(clientId: number) {
+    for (const [uid, p] of this.profiles) if (p.posterClientId === clientId) return uid;
+    return null;
+  }
   async getProfile(uid: string) {
     return this.profiles.get(uid) ?? null;
   }
