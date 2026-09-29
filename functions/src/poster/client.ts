@@ -92,6 +92,10 @@ export class PosterClient implements PosterApi {
     return (await this.request<PosterClientRecord[]>("clients.getClients", { phone, num: 50, offset: 0 })) ?? [];
   }
 
+  async findClientsByBirthday(mmdd: string): Promise<PosterClientRecord[]> {
+    return (await this.request<PosterClientRecord[]>("clients.getClients", { birthday: mmdd })) ?? [];
+  }
+
   async getClient(clientId: number): Promise<PosterClientRecord | null> {
     try {
       const res = await this.request<PosterClientRecord[]>("clients.getClient", { client_id: clientId });

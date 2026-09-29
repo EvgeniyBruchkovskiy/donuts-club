@@ -1,10 +1,12 @@
 import { Timestamp, type Firestore } from "firebase-admin/firestore";
-import type { CacheEntry, Profile, RateWindow, Store } from "./store.js";
+import { canClaim, type CacheEntry, type LedgerEntry, type LedgerOutcome, type LedgerStatus, type Profile, type RateWindow, type Store } from "./store.js";
 
 // Collections (all closed to clients by firestore.rules; Admin SDK bypasses rules):
 //   profiles/{uid}          uid → Poster client_id
 //   loyaltyCache/{uid}      last getMyLoyalty result, 60 s TTL
 //   rateLimits/{kind:uid}   fixed-window counters
+//   config/bonusRules       bonus rules (owner edits in the console; disabled by default)
+//   bonusLedger/{uid_rule_period}  one entry per accrual — the idempotency journal
 export class FirestoreStore implements Store {
   constructor(private readonly db: Firestore) {}
 
@@ -32,6 +34,31 @@ export class FirestoreStore implements Store {
 
   async clearCache(uid: string): Promise<void> {
     await this.db.doc(`loyaltyCache/${uid}`).delete();
+  }
+
+  async getBonusRulesRaw(): Promise<unknown> {
+    const s = await this.db.doc("config/bonusRules").get();
+    return s.exists ? s.data() : null;
+  }
+
+  async claimLedger(key: string, entry: LedgerEntry): Promise<boolean> {
+    const ref = this.db.doc(`bonusLedger/${key}`);
+    return this.db.runTransaction(async (tx) => {
+      const s = await tx.get(ref);
+      const status = s.exists ? (s.get("status") as LedgerStatus) : null;
+      if (!canClaim(status)) return false;
+      tx.set(ref, { ...entry, createdAt: Timestamp.fromDate(entry.createdAt), status: "pending", attempts: (s.exists ? Number(s.get("attempts")) || 1 : 0) + 1 });
+      return true;
+    });
+  }
+
+  async finishLedger(key: string, o: LedgerOutcome): Promise<void> {
+    await this.db.doc(`bonusLedger/${key}`).set({ ...o, finishedAt: Timestamp.fromDate(o.finishedAt) }, { merge: true });
+  }
+
+  async findUidByClientId(clientId: number): Promise<string | null> {
+    const q = await this.db.collection("profiles").where("posterClientId", "==", clientId).limit(1).get();
+    return q.empty ? null : q.docs[0].id;
   }
 
   async hitRateLimit(key: string, step: (prev: RateWindow | null) => { allowed: boolean; next: RateWindow }): Promise<boolean> {

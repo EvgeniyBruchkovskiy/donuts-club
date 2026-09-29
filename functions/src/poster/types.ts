@@ -18,6 +18,8 @@ export interface PosterClientRecord {
   client_groups_id: string;
   client_groups_name: string;
   client_groups_discount: string;
+  /** Group's birthday bonus in kopecks ("0" when the group has none). */
+  birthday_bonus?: string;
   /** "1" bonus program, "2" discount program. */
   loyalty_type: string;
   delete?: string;
@@ -48,6 +50,8 @@ export interface CreateClientInput {
 export interface PosterApi {
   findClientsByPhone(phone: string): Promise<PosterClientRecord[]>;
   getClient(clientId: number): Promise<PosterClientRecord | null>;
+  /** Clients whose birthday is `mmdd` (e.g. "0618"; verified: zero-padded, exact match). */
+  findClientsByBirthday(mmdd: string): Promise<PosterClientRecord[]>;
   createClient(input: CreateClientInput): Promise<number>;
   /** `amountUah` in hryvnias (verified: +1 adds 100 kopecks). Returns the new balance in hryvnias. */
   changeClientBonus(clientId: number, amountUah: number): Promise<number>;
