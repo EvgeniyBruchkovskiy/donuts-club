@@ -115,7 +115,7 @@ header.nav{
 
 /* ============ HERO ============ */
 .hero{position:relative;padding:70px 0 90px;overflow:hidden}
-.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
+.hero-grid{position:relative;z-index:2;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
 .hero h1{font-size:clamp(44px,7vw,86px);font-weight:700}
 .hero h1 .grad{background:linear-gradient(120deg,#FF5C9F,#FF9F45);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero p.lead{font-size:clamp(17px,2.2vw,22px);color:var(--ink-soft);margin:22px 0 30px;max-width:520px;line-height:1.5}
@@ -171,7 +171,8 @@ header.nav{
 .card p{font-size:14px;color:var(--ink-soft);margin-top:6px;min-height:38px;line-height:1.35}
 .card .price{display:inline-block;margin-top:12px;font-weight:800;color:var(--pink-d);font-size:17px;
   background:#FFEAF2;padding:6px 14px;border-radius:100px}
-.tag{position:absolute;top:14px;right:14px;font-size:11px;font-weight:800;letter-spacing:.5px;
+.nw{white-space:nowrap}
+.tag{position:absolute;z-index:3;top:14px;right:14px;font-size:11px;font-weight:800;letter-spacing:.5px;
   background:linear-gradient(135deg,#FFC93C,#FF8A3C);color:#fff;padding:5px 11px;border-radius:100px;text-transform:uppercase;box-shadow:0 6px 14px rgba(255,138,60,.4)}
 
 /* ============ CINNAMON ROLLS ============ */
@@ -205,7 +206,7 @@ header.nav{
 .ccard{position:relative}
 #cinSweet{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
 @media (prefers-reduced-motion:reduce){.leaf{display:none}.aut-card{animation:none}}
-html,body{overflow-x:hidden}
+html,body{overflow-x:clip}
 .tealist{display:block;color:var(--ink);font-weight:600;margin-bottom:6px}
 #drinkBubble{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
 
@@ -367,6 +368,70 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
 .collab-deco.d2{width:170px;right:150px;top:40px;opacity:.95;animation-delay:1.5s}
 @media(max-width:1100px){.collab-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.collab-deco.d2{display:none}.collab-steps{grid-template-columns:1fr}}
 @media(max-width:640px){.collab-card{padding:32px 20px;border-radius:28px}.collab-grid{grid-template-columns:1fr;gap:12px}.cfeat{display:grid;grid-template-columns:48px 1fr;column-gap:14px;align-items:start}.cfeat .cic{grid-row:span 2;width:48px;height:48px;font-size:24px}.cfeat h3{margin-top:2px}.cfeat p{margin-top:4px}.collab-steps{grid-template-columns:1fr;gap:10px}.collab-head .sec-title{font-size:34px}.cfeat{padding:18px 16px}.cfeat h3{font-size:16px}.cfeat p{font-size:13px}.collab-deco.d1{width:130px;right:-30px;top:-20px;opacity:.9}.cstep{font-size:14px}.collab-btn{width:100%;text-align:center}}
+
+/* ============ MOBILE POLISH ============ */
+@media(max-width:640px){
+  .section{padding:60px 0}
+  .sec-title{font-size:32px;line-height:1.12}
+  .sec-sub{font-size:16px}
+  .eyebrow{font-size:12px;letter-spacing:1.4px;padding:7px 14px}
+  /* hero */
+  .hero{padding:34px 0 30px}
+  .hero .eyebrow{white-space:nowrap;font-size:11px;letter-spacing:1px}
+  .hero h1{font-size:44px;line-height:1.04}
+  .hero p.lead{font-size:16px;margin:18px auto 24px}
+  .hero-cta{flex-direction:column;align-items:center;gap:10px}
+  .hero-cta .btn{width:100%;max-width:320px;text-align:center}
+  .aut-promo{font-size:14px;margin-top:14px}
+  .hero-badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:24px}
+  .hb{align-items:center;text-align:center}
+  .hb b{font-size:22px}
+  .hb span{font-size:12px}
+  .hero-stage{margin-top:6px}
+  /* donut cards */
+  .menu-grid{margin-top:30px;gap:12px}
+  .card{padding:14px 10px 16px;border-radius:22px}
+  .card .imgwrap{height:112px;margin:0 auto 10px}
+  .card .imgwrap img{max-height:112px}
+  .card h3{font-size:16px;line-height:1.2}
+  .card p{font-size:12.5px;min-height:0;line-height:1.35}
+  .card .price{font-size:15px;margin-top:10px;padding:5px 12px}
+  .card .tag{top:10px;right:10px;font-size:10px;padding:4px 9px}
+  /* autumn + drink-style cards */
+  .dcard .tag{display:block;width:max-content;margin:5px 0 0}
+  .dcard h3{line-height:1.25}
+  /* cinnamons */
+  .cat-title{margin-top:26px;font-size:22px}
+  .cin-grid,#cinSweet,.cin-grid.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0 30px}
+  .ccard{padding:10px 10px 14px;border-radius:20px}
+  .ccard .cimg{border-radius:14px}
+  .ccard h3{font-size:15px;margin-top:10px}
+  .ccard .price{font-size:14px;padding:5px 12px;margin-top:8px}
+  .ccard .tag{top:14px;right:14px;font-size:10px;padding:4px 9px}
+  /* collab */
+  .collab-head .sec-title{font-size:30px}
+  .collab-deco.d1{width:104px;right:-22px;top:-14px;opacity:.85}
+  .collab-head .eyebrow{position:relative;z-index:3}
+  /* footer */
+  .foot-grid{gap:28px}
+}
+@media(max-width:370px){
+  .hero h1{font-size:38px}
+  .card p{display:none}
+  .hero .eyebrow{font-size:10px}
+}
+
+@media(max-width:960px){.brand .brand-sub{display:block;font-size:10px;letter-spacing:1.6px;margin-top:2px}}
+@media(max-width:640px){
+  .deliv-card{padding:34px 24px;border-radius:28px}
+  .deliv-card h2{font-size:28px;line-height:1.15}
+  .deliv-card p{font-size:15px}
+  .brand{font-size:19px;gap:10px}
+  .brand .logo-full{width:50px;height:50px}
+}
+
+.nav-links .nav-order{display:none}
+@media(max-width:960px){.nav-links .nav-order{display:block;margin-top:6px;background:linear-gradient(135deg,#FF7FB0,#FF3F86);color:#fff!important;opacity:1;border-radius:100px;padding:10px 16px;text-align:center;box-shadow:0 8px 18px rgba(255,78,147,.3)}}
 </style>
 </head>
 <body>
@@ -384,6 +449,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
       <a href="#reviews">Відгуки</a>
       <a href="#delivery">Доставка</a>
       <a href="#location">Де ми</a>
+      <a class="nav-order" href="https://glovoapp.com/uk/ua/kropyvnytskyi/stores/donuts-club-kro" target="_blank" rel="noopener">🛵 Замовити в Glovo</a>
     </nav>
     <div class="nav-cta">
       <a href="#location" class="btn btn-ghost">Як дійти</a>
@@ -427,7 +493,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
 <section class="section" id="menu">
   <div class="wrap center">
     <span class="eyebrow reveal">Наше меню</span>
-    <h2 class="sec-title reveal">Обери свій пончик 🍩</h2>
+    <h2 class="sec-title reveal">Обери свій <span class="nw">пончик 🍩</span></h2>
     <p class="sec-sub center reveal">Кожен пончик — з любов'ю, свіжою глазур'ю та щедрою посипкою. Обирай улюблений або збери власний набір.</p>
     <div class="menu-grid" id="menuGrid"></div>
   </div>
@@ -443,7 +509,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
   </div>
   <div class="wrap center">
     <span class="eyebrow reveal">Сезонне меню</span>
-    <h2 class="sec-title reveal">Осіннє меню 🍂</h2>
+    <h2 class="sec-title reveal">Осіннє <span class="nw">меню 🍂</span></h2>
     <p class="sec-sub center reveal">Гарбузове латте, пряні глінтвейни, осінні бабл ті та матча — зігріваємося смачно.</p>
     <div class="aut-tabs reveal" id="autTabs"></div>
     <div class="drink-grid aut-grid" id="autGrid"></div>
@@ -469,7 +535,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
     <div class="collab-card reveal">
       <div class="collab-head">
         <span class="eyebrow">Для свят і бізнесу</span>
-        <h2 class="sec-title">Співпраця з нами 🤝</h2>
+        <h2 class="sec-title">Співпраця з <span class="nw">нами 🤝</span></h2>
         <p class="sec-sub">Готуємо не лише для вітрини. Кав'ярням, офісам, святам і подіям — зробимо саме те, що потрібно вам.</p>
       </div>
       <div class="collab-grid">
@@ -518,7 +584,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
 <section class="section" id="reviews">
   <div class="wrap center">
     <span class="eyebrow reveal">Відгуки</span>
-    <h2 class="sec-title reveal">Що кажуть гості 💬</h2>
+    <h2 class="sec-title reveal">Що кажуть <span class="nw">гості 💬</span></h2>
     <div class="rev-grid" id="revGrid"></div>
   </div>
 </section>
@@ -527,7 +593,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
 <section class="section" id="insta">
   <div class="wrap center">
     <span class="eyebrow reveal">@donuts_club_krop</span>
-    <h2 class="sec-title reveal">Ми в Instagram 📸</h2>
+    <h2 class="sec-title reveal">Ми в <span class="nw">Instagram 📸</span></h2>
     <p class="sec-sub center reveal">Свіжі новинки, акції та смачні кадри щодня. Підписуйся й не пропусти нові смаки!</p>
     <div class="ig-grid" id="igGrid"></div>
     <div style="margin-top:34px"><a href="https://instagram.com/donuts_club_krop" target="_blank" rel="noopener" class="btn btn-primary">Підписатися в Instagram</a></div>
@@ -539,7 +605,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
   <div class="wrap">
     <div class="deliv-card reveal">
       <div>
-        <h2>Привеземо щастя<br>прямо до дверей 🛵</h2>
+        <h2>Привеземо щастя<br>прямо до <span class="nw">дверей 🛵</span></h2>
         <p>Замовляй улюблені пончики з доставкою по Кропивницькому. Швидко, свіжо й у гарній коробці — ідеально для подарунка чи вечора вдома.</p>
         <div class="deliv-apps">
           <a class="chip chip-cta" href="https://glovoapp.com/uk/ua/kropyvnytskyi/stores/donuts-club-kro" target="_blank" rel="noopener">🛵 Замовити в Glovo</a>
@@ -558,7 +624,7 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
 <section class="section" id="location">
   <div class="wrap center" style="margin-bottom:40px">
     <span class="eyebrow reveal">Де ми знаходимось</span>
-    <h2 class="sec-title reveal">Завітай у гості 📍</h2>
+    <h2 class="sec-title reveal">Завітай у <span class="nw">гості 📍</span></h2>
     <p class="sec-sub center reveal">Знайти нас легко — чекаємо на тебе щодня зі свіжою випічкою та ароматною кавою.</p>
   </div>
   <div class="wrap loc-grid">
@@ -587,8 +653,6 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
       <p style="margin-top:16px;max-width:320px">Найсмачніші авторські пончики у Кропивницькому. Свіже щодня, з любов'ю до кожного гостя.</p>
       <div class="socials">
         <a href="https://instagram.com/donuts_club_krop" target="_blank" rel="noopener" title="Instagram">📷</a>
-        <a href="#" title="Telegram">✈️</a>
-        <a href="#" title="TikTok">🎵</a>
       </div>
     </div>
     <div>
