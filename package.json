@@ -2,14 +2,18 @@
   "name": "donuts-club",
   "private": true,
   "workspaces": [
-    "web"
+    "web",
+    "functions"
   ],
   "scripts": {
     "dev": "npm run dev -w web",
     "build": "npm run build -w web",
-    "typecheck": "npm run typecheck -w web",
+    "typecheck": "npm run typecheck -w web && npm run typecheck -w functions",
     "shots": "playwright test e2e/screenshots.spec.ts",
-    "shots:compare": "node e2e/compare.mjs"
+    "shots:compare": "node e2e/compare.mjs",
+    "test": "npm test -w functions",
+    "lint": "npm run lint -w functions",
+    "check": "npm run lint && npm run typecheck && npm test"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
