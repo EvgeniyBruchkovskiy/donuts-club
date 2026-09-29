@@ -1,0 +1,4 @@
+/* Real <img width height> attributes (for CLS) must not override the legacy
+   intrinsic sizing: let CSS width/aspect-ratio drive the height as before.
+   :where() keeps specificity at 0 so explicit rules (e.g. .brand .logo) still win. */
+:where(img[width][height]){height:auto}

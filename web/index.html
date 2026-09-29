@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DONUTS CLUB — найсмачніші пончики у Кропивницькому</title>
+<meta name="description" content="DONUTS CLUB — авторські пончики ручної роботи у Кропивницькому. Свіжа випічка щодня, доставка та святкові набори. Гоголя 80ж." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script type="module" src="/src/main.ts"></script>
+</head>
+<body>
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <div class="brand"><img class="logo logo-full" src="/img/logofull.webp" width="483" height="520" alt="DONUTS CLUB"><span class="wm-wrap"><span class="wm">DONUTS<b> CLUB</b></span><small class="brand-sub">Кропивницький</small></span></div>
+    <nav class="nav-links">
+      <a href="#menu">Меню</a>
+      <a href="#autumn">Осінь 🍂</a>
+      <a href="#cinnamon">Сінамони</a>
+      <a href="#collab">Співпраця</a>
+      <a href="#about">Про нас</a>
+      <a href="#reviews">Відгуки</a>
+      <a href="#delivery">Доставка</a>
+      <a href="#location">Де ми</a>
+      <a class="nav-order" href="https://glovoapp.com/uk/ua/kropyvnytskyi/stores/donuts-club-kro" target="_blank" rel="noopener">🛵 Замовити в Glovo</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#location" class="btn btn-ghost">Як дійти</a>
+      <a href="https://glovoapp.com/uk/ua/kropyvnytskyi/stores/donuts-club-kro" target="_blank" rel="noopener" class="btn btn-primary">Замовити 🍩</a>
+    </div>
+    <div class="burger" id="burger"><span></span><span></span><span></span></div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div id="fallField" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div class="reveal in">
+      <span class="eyebrow">🍩 Кропивницький · свіже щодня</span>
+      <h1>Пончики, від&nbsp;яких <span class="grad">неможливо</span> відірватись</h1>
+      <p class="lead">Авторська випічка ручної роботи, соковита глазур і посипка, що хрумтить. Заходь на каву — і забирай коробочку щастя з собою.</p>
+      <div class="hero-cta">
+        <a href="#menu" class="btn btn-primary">Дивитися меню</a>
+        <a href="#location" class="btn btn-ghost">📍 Ми на Гоголя 80ж</a>
+      </div>
+      <a href="#autumn" class="aut-promo">🍂 Нове осіннє меню: гарбузове латте, глінтвейни, бабл ті →</a>
+      <div class="hero-badges">
+        <div class="hb"><b>25+</b><span>смаків пончиків</span></div>
+        <div class="hb"><b>100%</b><span>ручна робота</span></div>
+        <div class="hb"><b>щодня</b><span>свіжа випічка</span></div>
+      </div>
+    </div>
+    <div class="hero-stage" id="heroStage">
+      <div class="blob" style="width:260px;height:260px;background:#FFC7E0;top:60px;left:80px"></div>
+      <div class="blob" style="width:200px;height:200px;background:#FFE3B0;bottom:30px;right:40px"></div>
+      <div class="float" style="top:0;left:70px;width:290px;animation-delay:0s"><img class="ph" src="/img/strawberry.webp" width="560" height="504" alt="Полуничний пончик"></div>
+      <div class="float" style="top:255px;left:-20px;width:215px;animation-delay:1.2s"><img class="ph" src="/img/mms.webp" width="560" height="397" alt="M&M's пончик"></div>
+      <div class="float" style="top:250px;right:-10px;width:260px;animation-delay:.6s"><img class="ph" src="/img/rainbow.webp" width="560" height="385" alt="Веселка пончик"></div>
+      <div class="float" style="top:40px;right:0;width:205px;animation-delay:1.8s"><img class="ph" src="/img/marshmallow.webp" width="560" height="437" alt="Маршмелоу пончик"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="section" id="menu">
+  <div class="wrap center">
+    <span class="eyebrow reveal">Наше меню</span>
+    <h2 class="sec-title reveal">Обери свій <span class="nw">пончик 🍩</span></h2>
+    <p class="sec-sub center reveal">Кожен пончик — з любов'ю, свіжою глазур'ю та щедрою посипкою. Обирай улюблений або збери власний набір.</p>
+    <div class="menu-grid" id="menuGrid"></div>
+  </div>
+</section>
+
+<!-- AUTUMN MENU -->
+<section class="section autumn" id="autumn">
+  <div class="leaves" aria-hidden="true">
+    <span class="leaf" style="left:4%;animation-delay:0s">🍁</span><span class="leaf" style="left:17%;animation-delay:4s;font-size:18px">🍂</span>
+    <span class="leaf" style="left:33%;animation-delay:8s">🍁</span><span class="leaf" style="left:52%;animation-delay:2s;font-size:20px">🍂</span>
+    <span class="leaf" style="left:68%;animation-delay:6s">🍁</span><span class="leaf" style="left:84%;animation-delay:10s;font-size:18px">🍂</span>
+    <span class="leaf" style="left:95%;animation-delay:3s">🍁</span>
+  </div>
+  <div class="wrap center">
+    <span class="eyebrow reveal">Сезонне меню</span>
+    <h2 class="sec-title reveal">Осіннє <span class="nw">меню 🍂</span></h2>
+    <p class="sec-sub center reveal">Гарбузове латте, пряні глінтвейни, осінні бабл ті та матча — зігріваємося смачно.</p>
+    <div class="aut-tabs reveal" id="autTabs"></div>
+    <div class="drink-grid aut-grid" id="autGrid"></div>
+  </div>
+</section>
+
+<!-- CINNAMON ROLLS -->
+<section class="section" id="cinnamon">
+  <div class="wrap center">
+    <span class="eyebrow reveal">Свіже щодня</span>
+    <h2 class="sec-title reveal">Сінамони 🌀</h2>
+    <p class="sec-sub center reveal">Пишні сінамони ручної роботи — солодкі та солоні. Ідеально до ароматної кави.</p>
+    <h3 class="cat-title reveal">Солодкі</h3>
+    <div class="cin-grid" id="cinSweet"></div>
+    <h3 class="cat-title reveal">Солоні</h3>
+    <div class="cin-grid two" id="cinSalty"></div>
+  </div>
+</section>
+
+<!-- COLLAB -->
+<section class="section collab" id="collab">
+  <div class="wrap">
+    <div class="collab-card reveal">
+      <div class="collab-head">
+        <span class="eyebrow">Для свят і бізнесу</span>
+        <h2 class="sec-title">Співпраця з <span class="nw">нами 🤝</span></h2>
+        <p class="sec-sub">Готуємо не лише для вітрини. Кав'ярням, офісам, святам і подіям — зробимо саме те, що потрібно вам.</p>
+      </div>
+      <div class="collab-grid">
+        <div class="cfeat"><div class="cic">📦</div><h3>Будь-яка кількість</h3><p>Приймаємо передзамовлення на будь-який обсяг — від коробки до кількох сотень пончиків.</p></div>
+        <div class="cfeat"><div class="cic">🎂</div><h3>Торти на замовлення</h3><p>Святкові торти на день народження, весілля чи корпоратив — під ваш смак і дизайн.</p></div>
+        <div class="cfeat"><div class="cic">✨</div><h3>Індивідуальні замовлення</h3><p>Власна глазур, кольори, логотип, подарункові набори — втілимо вашу ідею.</p></div>
+        <div class="cfeat"><div class="cic">🤝</div><h3>Все за домовленістю</h3><p>Терміни, кількість, оформлення та ціну обговорюємо індивідуально.</p></div>
+      </div>
+      <div class="collab-steps">
+        <div class="cstep"><b>1</b><span>Напишіть нам в Instagram</span></div>
+        <div class="cstep"><b>2</b><span>Обговоримо деталі та терміни</span></div>
+        <div class="cstep"><b>3</b><span>Готуємо свіже до потрібної дати</span></div>
+      </div>
+      <div class="collab-cta">
+        <a href="https://ig.me/m/donuts_club_krop" target="_blank" rel="noopener" class="btn collab-btn">💌 Написати в Instagram</a>
+        <span class="collab-handle">@donuts_club_krop</span>
+      </div>
+      <img class="collab-deco d1" src="/img/strawberry.webp" width="560" height="504" loading="lazy" alt="" aria-hidden="true">
+      <img class="collab-deco d2" src="/img/mms.webp" width="560" height="397" loading="lazy" alt="" aria-hidden="true">
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="wrap about">
+    <div class="reveal">
+      <span class="eyebrow">Про нас</span>
+      <h2 class="sec-title">Маленька пекарня<br>з великою любов'ю</h2>
+      <p class="sec-sub">DONUTS CLUB — це мережа авторських пончиків, і тепер улюблений смак завітав до Кропивницького. Ми готуємо за перевіреними рецептами: замішуємо тісто щоранку, поливаємо глазур'ю вручну й ніколи не використовуємо вчорашню випічку.</p>
+      <div class="feature-row">
+        <div class="feat"><div class="ic">🌅</div><div><b>Свіже щодня</b><span>Печемо зранку, продаємо того ж дня</span></div></div>
+        <div class="feat"><div class="ic">🤍</div><div><b>Ручна робота</b><span>Кожен пончик оформлюємо вручну</span></div></div>
+        <div class="feat"><div class="ic">🎁</div><div><b>Набори на свято</b><span>Зберемо коробку під будь-яку подію</span></div></div>
+      </div>
+    </div>
+    <div class="about-art" id="aboutArt">
+      <div class="float" style="top:0;left:0;width:245px;animation-delay:.2s"><img class="ph" src="/img/don_limon.webp" width="560" height="432" loading="lazy" alt=""></div>
+      <div class="float" style="top:150px;right:0;width:215px;animation-delay:1s"><img class="ph" src="/img/choco.webp" width="560" height="444" loading="lazy" alt=""></div>
+      <div class="float" style="bottom:0;left:95px;width:205px;animation-delay:1.6s"><img class="ph" src="/img/coco.webp" width="560" height="427" loading="lazy" alt=""></div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="section" id="reviews">
+  <div class="wrap center">
+    <span class="eyebrow reveal">Відгуки</span>
+    <h2 class="sec-title reveal">Що кажуть <span class="nw">гості 💬</span></h2>
+    <div class="rev-grid" id="revGrid"></div>
+  </div>
+</section>
+
+<!-- INSTAGRAM -->
+<section class="section" id="insta">
+  <div class="wrap center">
+    <span class="eyebrow reveal">@donuts_club_krop</span>
+    <h2 class="sec-title reveal">Ми в <span class="nw">Instagram 📸</span></h2>
+    <p class="sec-sub center reveal">Свіжі новинки, акції та смачні кадри щодня. Підписуйся й не пропусти нові смаки!</p>
+    <div class="ig-grid" id="igGrid"></div>
+    <div style="margin-top:34px"><a href="https://instagram.com/donuts_club_krop" target="_blank" rel="noopener" class="btn btn-primary">Підписатися в Instagram</a></div>
+  </div>
+</section>
+
+<!-- DELIVERY -->
+<section class="section delivery" id="delivery">
+  <div class="wrap">
+    <div class="deliv-card reveal">
+      <div>
+        <h2>Привеземо щастя<br>прямо до <span class="nw">дверей 🛵</span></h2>
+        <p>Замовляй улюблені пончики з доставкою по Кропивницькому. Швидко, свіжо й у гарній коробці — ідеально для подарунка чи вечора вдома.</p>
+        <div class="deliv-apps">
+          <a class="chip chip-cta" href="https://glovoapp.com/uk/ua/kropyvnytskyi/stores/donuts-club-kro" target="_blank" rel="noopener">🛵 Замовити в Glovo</a>
+          <a class="chip" href="https://instagram.com/donuts_club_krop" target="_blank" rel="noopener">📸 Instagram</a>
+        </div>
+      </div>
+      <div class="deliv-art">
+        <div class="float" style="top:-20px;right:0;width:200px"><img class="ph" src="/img/banana.webp" width="560" height="445" loading="lazy" alt=""></div>
+        <div class="float" style="bottom:-10px;right:130px;width:170px;animation-delay:1s"><img class="ph" src="/img/oreo.webp" width="560" height="442" loading="lazy" alt=""></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATION -->
+<section class="section" id="location">
+  <div class="wrap center" style="margin-bottom:40px">
+    <span class="eyebrow reveal">Де ми знаходимось</span>
+    <h2 class="sec-title reveal">Завітай у <span class="nw">гості 📍</span></h2>
+    <p class="sec-sub center reveal">Знайти нас легко — чекаємо на тебе щодня зі свіжою випічкою та ароматною кавою.</p>
+  </div>
+  <div class="wrap loc-grid">
+    <div class="loc-info reveal">
+      <div class="loc-item"><div class="ic">📍</div><div><b>Адреса</b><br><span>м. Кропивницький, вул. Гоголя, 80ж</span></div></div>
+      <div class="loc-item"><div class="ic">🕘</div><div><b>Графік роботи</b><br><span>Пн–Пт: 07:15 – 21:00<br>Сб–Нд: 09:00 – 21:00</span></div></div>
+      <div class="loc-item"><div class="ic">🛵</div><div><b>Доставка</b><br><span>Тільки Glovo — по всьому Кропивницькому</span></div></div>
+      <div class="loc-item"><div class="ic">💌</div><div><b>Instagram</b><br><span>@donuts_club_krop</span></div></div>
+      <div style="margin-top:22px"><a href="https://maps.google.com/?q=Гоголя+80ж+Кропивницький" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%">Прокласти маршрут</a></div>
+    </div>
+    <div class="map reveal">
+      <div class="map-fallback"><span class="pin">📍</span>м. Кропивницький,<br>вул. Гоголя, 80ж</div>
+      <a class="map-open" href="https://maps.google.com/?q=Гоголя+80ж+Кропивницький" target="_blank" rel="noopener">Відкрити в Google Maps ↗</a>
+      <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+        src="https://maps.google.com/maps?q=%D0%93%D0%BE%D0%B3%D0%BE%D0%BB%D1%8F%2080%D0%B6%20%D0%9A%D1%80%D0%BE%D0%BF%D0%B8%D0%B2%D0%BD%D0%B8%D1%86%D1%8C%D0%BA%D0%B8%D0%B9&t=&z=16&ie=UTF8&iwloc=&output=embed"
+        title="DONUTS CLUB на карті"></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <div class="brand" style="color:#FFE9D8"><img class="logo" src="/img/logo.svg" width="200" height="200" loading="lazy" alt="DONUTS CLUB"><span class="wm-wrap"><span class="wm">DONUTS<b style="color:#FF9CC4"> CLUB</b></span><small class="brand-sub" style="color:#FFB3D2;opacity:.85">Кропивницький</small></span></div>
+      <p style="margin-top:16px;max-width:320px">Найсмачніші авторські пончики у Кропивницькому. Свіже щодня, з любов'ю до кожного гостя.</p>
+      <div class="socials">
+        <a href="https://instagram.com/donuts_club_krop" target="_blank" rel="noopener" title="Instagram">📷</a>
+      </div>
+    </div>
+    <div>
+      <h4>Меню</h4>
+      <a href="#menu">Пончики</a>
+      <a href="#delivery">Доставка</a>
+      <a href="#collab">Співпраця</a>
+      <a href="#reviews">Відгуки</a>
+      <a href="#about">Про нас</a>
+    </div>
+    <div>
+      <h4>Контакти</h4>
+      <p>вул. Гоголя, 80ж</p>
+      <p>Кропивницький</p>
+      <p>Пн–Пт 07:15–21:00</p>
+      <p>Сб–Нд 09:00–21:00</p>
+      <p>@donuts_club_krop</p>
+    </div>
+  </div>
+  <div class="wrap copy">© 2026 DONUTS CLUB · Зроблено з любов'ю та посипкою 🍩</div>
+</footer>
+
+</body>
+</html>

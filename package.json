@@ -1,0 +1,19 @@
+{
+  "name": "donuts-club",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "typecheck": "npm run typecheck -w web",
+    "shots": "playwright test e2e/screenshots.spec.ts",
+    "shots:compare": "node e2e/compare.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0"
+  }
+}
