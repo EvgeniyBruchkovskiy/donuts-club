@@ -10,7 +10,7 @@ import type { Loyalty } from "./types";
 
 const RESEND_SECONDS = 60;
 /** Mirrors Poster → Програми лояльності: the group switch threshold and the top bonus percent. */
-const LEVEL_UP_UAH = 1500;
+const LEVEL_UP_UAH = 2000;
 const TOP_PERCENT = 3;
 type State = "loading" | "phone" | "confirm" | "code" | "join" | "cabinet" | "failed";
 
