@@ -7,6 +7,10 @@ import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const pub = resolve(root, "web/public");
+// SF Pro Rounded is not redistributable, so it is read from the local macOS install (Apple's SF Pro package).
+const fontDir = process.env.SF_ROUNDED_DIR ?? "/Library/Fonts";
+const sfFace = (w, name) => `@font-face{font-family:"SF Pro Rounded";font-weight:${w};src:url(data:font/otf;base64,${
+  readFileSync(resolve(fontDir, `SF-Pro-Rounded-${name}.otf`)).toString("base64")}) format("opentype")}`;
 const img = (f) => "data:image/webp;base64," + readFileSync(resolve(pub, "img", f)).toString("base64");
 
 // Favicon SVG: the logo without its floor shadow, cropped tight to the donut.
@@ -21,10 +25,10 @@ const iconHtml = (size, pad, bg) => `<html><body style="margin:0;background:${bg
   <img src="${faviconUri}" style="display:block;width:${size - 2 * pad}px;height:${size - 2 * pad}px;margin:${pad}px"></body></html>`;
 
 const ogHtml = `<!doctype html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@700;800&display=block" rel="stylesheet">
 <style>
+  ${sfFace(600, "Semibold")}${sfFace(700, "Bold")}${sfFace(800, "Heavy")}
   *{box-sizing:border-box;margin:0}
-  body{width:1200px;height:630px;overflow:hidden;font-family:Fredoka,sans-serif;color:#3B2415;position:relative;
+  body{width:1200px;height:630px;overflow:hidden;font-family:"SF Pro Rounded",sans-serif;color:#3B2415;position:relative;
     background:radial-gradient(900px 600px at 85% 0%,#FFD6E8 0%,transparent 60%),
                radial-gradient(700px 500px at 0% 100%,#FFEBCB 0%,transparent 60%),
                linear-gradient(180deg,#FFF9F2,#FFEFF5)}
@@ -32,7 +36,7 @@ const ogHtml = `<!doctype html><html><head><meta charset="utf-8">
   .left{position:absolute;left:72px;top:0;bottom:0;width:560px;display:flex;flex-direction:column;justify-content:center}
   .brand{display:flex;align-items:center;gap:22px;margin-bottom:34px}
   .brand img{width:120px;height:120px;filter:drop-shadow(0 10px 18px rgba(94,58,36,.25))}
-  .wm{font-family:"Baloo 2";font-weight:800;font-size:64px;line-height:.9;letter-spacing:.5px}
+  .wm{font-weight:800;font-size:58px;line-height:.95;white-space:nowrap}
   .wm b{color:#FF4E93}
   .city{font-size:24px;font-weight:600;color:#6b4a34;margin-top:6px}
   h1{font-size:62px;line-height:1.02;font-weight:700;letter-spacing:-.5px}
