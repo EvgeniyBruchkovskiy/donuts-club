@@ -51,8 +51,16 @@ export class FakePoster implements PosterApi {
     if (this.failCreateWith) throw this.failCreateWith;
     this.created.push(input);
     const id = String(100 + this.created.length);
-    this.clients.push(client({ client_id: id, lastname: input.client_name, phone_number: input.phone.replace(/\D/g, ""), bonus: "5000", total_payed_sum: "0" }));
+    this.clients.push(client({ client_id: id, lastname: input.client_name, phone_number: input.phone.replace(/\D/g, ""), card_number: input.card_number ?? "", bonus: "5000", total_payed_sum: "0" }));
     return Number(id);
+  }
+  cardNumberChanges: { clientId: number; cardNumber: string }[] = [];
+  failCardNumberWith?: Error;
+  async setClientCardNumber(clientId: number, cardNumber: string) {
+    this.calls.push("updateClient");
+    if (this.failCardNumberWith) throw this.failCardNumberWith;
+    this.cardNumberChanges.push({ clientId, cardNumber });
+    this.clients.find((x) => x.client_id === String(clientId))!.card_number = cardNumber;
   }
   async findClientsByBirthday(mmdd: string) {
     this.calls.push("getClientsByBirthday");

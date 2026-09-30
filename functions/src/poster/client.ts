@@ -110,6 +110,10 @@ export class PosterClient implements PosterApi {
     return Number(await this.request<number | string>("clients.createClient", {}, input));
   }
 
+  async setClientCardNumber(clientId: number, cardNumber: string): Promise<void> {
+    await this.request("clients.updateClient", {}, { client_id: clientId, card_number: cardNumber });
+  }
+
   async changeClientBonus(clientId: number, amountUah: number): Promise<number> {
     return Number(await this.request<number | string>("clients.changeClientBonus", {}, { client_id: clientId, count: amountUah }));
   }

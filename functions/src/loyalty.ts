@@ -26,6 +26,8 @@ export interface Loyalty {
   percent: number;
   groupName: string;
   totalPaidUah: number;
+  /** Encoded in the cabinet QR — the till's scanner looks clients up by card number, not phone. */
+  cardNumber: string;
   purchases: Purchase[];
 }
 
@@ -74,6 +76,7 @@ export function toLoyalty(c: PosterClientRecord, tx: PosterTransaction[]): Loyal
     percent: Math.max(Number(c.discount_per) || 0, Number(c.client_groups_discount) || 0),
     groupName: c.client_groups_name ?? "",
     totalPaidUah: uah(kop(c.total_payed_sum)),
+    cardNumber: c.card_number?.trim() || c.phone_number,
     purchases: tx
       .filter((t) => t.client_id === c.client_id && t.status === "2")
       .sort((a, b) => Number(b.date_close) - Number(a.date_close))
@@ -97,6 +100,21 @@ export async function resolveClient(uid: string, digits: string, deps: Deps): Pr
     deps.log("warn", "stored poster link is stale", { clientId: profile.posterClientId });
   }
   return { client: await findClientByPhone(deps.poster, digits, deps), profile };
+}
+
+/**
+ * The till finds a client by scanning their card number, so a client without one can't be
+ * picked by the cabinet QR. Give them their phone digits as the card number; never overwrite a real card.
+ */
+export async function ensureCardNumber(client: PosterClientRecord, deps: Pick<Deps, "poster" | "log">): Promise<PosterClientRecord> {
+  if (client.card_number?.trim()) return client;
+  try {
+    await deps.poster.setClientCardNumber(Number(client.client_id), client.phone_number);
+    return { ...client, card_number: client.phone_number };
+  } catch (err) {
+    deps.log("error", "set card number failed", { clientId: client.client_id, error: err instanceof Error ? err.name : "unknown" });
+    return client;
+  }
 }
 
 /** Bonus rules must never break the cabinet: failures are logged, the page still loads. */
@@ -127,6 +145,7 @@ export async function getMyLoyalty(uid: string, digits: string, deps: Deps): Pro
       await deps.store.setProfile(uid, { posterClientId: clientId, source: profile?.source ?? "linked", createdAt: profile?.createdAt ?? now });
       if (!profile && (await safeWelcome(uid, clientId, "linked", deps))) client = (await deps.poster.getClient(clientId)) ?? client;
     }
+    client = await ensureCardNumber(client, deps);
     const from = kyivYmd(new Date(now.getTime() - HISTORY_DAYS * 86_400_000));
     const tx = await deps.poster.getClientTransactions(Number(client.client_id), from, kyivYmd(now));
     result = toLoyalty(client, tx);

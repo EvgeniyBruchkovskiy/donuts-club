@@ -34,6 +34,28 @@ describe("getMyLoyalty", () => {
     expect(r.purchases.map((p) => p.id)).not.toContain("other");
   });
 
+  it("gives a card-less client their phone digits as card number, for the till QR scanner", async () => {
+    const { deps, poster } = makeDeps();
+    poster.clients = [client({ card_number: "" })];
+    await expect(getMyLoyalty(UID, PHONE, deps)).resolves.toMatchObject({ cardNumber: PHONE });
+    expect(poster.cardNumberChanges).toEqual([{ clientId: 7, cardNumber: PHONE }]);
+  });
+
+  it("keeps an existing card number", async () => {
+    const { deps, poster } = makeDeps();
+    poster.clients = [client({ card_number: "0042" })];
+    await expect(getMyLoyalty(UID, PHONE, deps)).resolves.toMatchObject({ cardNumber: "0042" });
+    expect(poster.cardNumberChanges).toEqual([]);
+  });
+
+  it("still loads the cabinet when setting the card number fails", async () => {
+    const { deps, poster, logs } = makeDeps();
+    poster.clients = [client()];
+    poster.failCardNumberWith = new Error("boom");
+    await expect(getMyLoyalty(UID, PHONE, deps)).resolves.toMatchObject({ exists: true, cardNumber: PHONE });
+    expect(logs.some((l) => l.message === "set card number failed")).toBe(true);
+  });
+
   it("uses the group percent when higher and discount programs", async () => {
     const { deps, poster } = makeDeps();
     poster.clients = [client({ loyalty_type: "2", discount_per: "0", client_groups_discount: "10" })];

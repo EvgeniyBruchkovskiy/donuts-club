@@ -14,6 +14,8 @@ export interface PosterClientRecord {
   phone: string;
   /** Digits only, e.g. 380991234567. */
   phone_number: string;
+  /** What the till's barcode/QR scanner matches when picking a client ("" when none). */
+  card_number?: string;
   birthday: string;
   client_groups_id: string;
   client_groups_name: string;
@@ -43,6 +45,7 @@ export interface CreateClientInput {
   client_name: string;
   client_groups_id_client: number;
   phone: string;
+  card_number?: string;
   birthday?: string;
 }
 
@@ -53,6 +56,7 @@ export interface PosterApi {
   /** Clients whose birthday is `mmdd` (e.g. "0618"; verified: zero-padded, exact match). */
   findClientsByBirthday(mmdd: string): Promise<PosterClientRecord[]>;
   createClient(input: CreateClientInput): Promise<number>;
+  setClientCardNumber(clientId: number, cardNumber: string): Promise<void>;
   /** `amountUah` in hryvnias (verified: +1 adds 100 kopecks). Returns the new balance in hryvnias. */
   changeClientBonus(clientId: number, amountUah: number): Promise<number>;
   getClientTransactions(clientId: number, dateFrom: string, dateTo: string): Promise<PosterTransaction[]>;

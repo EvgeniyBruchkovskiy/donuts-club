@@ -46,6 +46,7 @@ export async function registerMe(uid: string, digits: string, raw: unknown, deps
         client_name: input.name,
         client_groups_id_client: WEB_CLIENT_GROUP_ID,
         phone: toPosterPhone(digits),
+        card_number: digits,
         ...(input.birthday ? { birthday: input.birthday } : {}),
       });
       created = true;

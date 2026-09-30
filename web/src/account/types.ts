@@ -15,6 +15,8 @@ export interface Loyalty {
   percent: number;
   groupName: string;
   totalPaidUah: number;
+  /** What the cabinet QR encodes — Poster's scanner matches card numbers. */
+  cardNumber: string;
   purchases: Purchase[];
 }
 

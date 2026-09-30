@@ -39,7 +39,7 @@ describe("registerMe", () => {
   it("creates a Poster client in the web group with the verified phone", async () => {
     const { deps, poster, store } = makeDeps(NOW);
     const r = await registerMe(UID, PHONE, { name: "Олена", birthday: "1995-02-28" }, deps);
-    expect(poster.created).toEqual([{ client_name: "Олена", client_groups_id_client: WEB_CLIENT_GROUP_ID, phone: "+380991234567", birthday: "1995-02-28" }]);
+    expect(poster.created).toEqual([{ client_name: "Олена", client_groups_id_client: WEB_CLIENT_GROUP_ID, phone: "+380991234567", card_number: PHONE, birthday: "1995-02-28" }]);
     expect(r.created).toBe(true);
     expect(r.loyalty).toMatchObject({ exists: true, bonusUah: 50 });
     expect(await store.getProfile(UID)).toMatchObject({ posterClientId: 101, source: "created" });
