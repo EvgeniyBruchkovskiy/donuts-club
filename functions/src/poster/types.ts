@@ -39,6 +39,8 @@ export interface PosterTransaction {
   payed_cert?: string;
   payed_ewallet?: string;
   payed_third_party?: string;
+  /** "1" fiscalised, "2" a fiscal return was printed for it (verified 2026-09-30, check 20742). */
+  print_fiscal?: string;
 }
 
 /** A line of a closed check (dash.getTransactionProducts; verified 2026-09-30). */

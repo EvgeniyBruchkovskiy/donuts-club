@@ -206,7 +206,13 @@ async function renderCabinet(l: Loyalty, phone = auth.currentUser?.phoneNumber ?
     sum.className = "h-sum";
     sum.textContent = uah(p.totalUah);
     li.append(when, sum);
-    if (p.paidWithBonusUah > 0) {
+    if (p.returned) {
+      li.classList.add("is-returned");
+      const r = document.createElement("small");
+      r.className = "h-returned";
+      r.textContent = "Повернення";
+      li.append(r);
+    } else if (p.paidWithBonusUah > 0) {
       const b = document.createElement("small");
       b.className = "h-bonus";
       b.textContent = `з них бонусами ${uah(p.paidWithBonusUah)}`;

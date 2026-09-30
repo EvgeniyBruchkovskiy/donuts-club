@@ -25,6 +25,11 @@ export interface Purchase {
   closedAt: string; // ISO
   totalUah: number;
   paidWithBonusUah: number;
+  /**
+   * A fiscal return was printed but the check was never returned in Poster itself, so it still counts
+   * there as a sale. Shown as "Повернення" and left out of the totals.
+   */
+  returned?: true;
   /** Missing when Poster couldn't return the check lines — the purchase is still listed. */
   items?: PurchaseItem[];
 }
@@ -79,8 +84,11 @@ export function toPurchase(t: PosterTransaction): Purchase {
     closedAt: new Date(Number(t.date_close)).toISOString(),
     totalUah: uah(paid),
     paidWithBonusUah: uah(kop(t.payed_bonus)),
+    ...(isReturned(t) && { returned: true as const }),
   };
 }
+
+export const isReturned = (t: PosterTransaction) => t.print_fiscal === "2";
 
 export function toItem(p: PosterTransactionProduct): PurchaseItem {
   return {
@@ -108,7 +116,9 @@ export async function withItems(purchases: Purchase[], deps: Pick<Deps, "poster"
 /** `historyFromMs`: purchases closed before it are left out of the list but still count in the total. */
 export function toLoyalty(c: PosterClientRecord, tx: PosterTransaction[], historyFromMs: number): Loyalty {
   const closed = tx.filter((t) => t.client_id === c.client_id && t.status === "2");
-  const paidWithBonus = closed.reduce((sum, t) => sum + kop(t.payed_bonus), 0);
+  const returned = closed.filter(isReturned);
+  const paid = kop(c.total_payed_sum) - returned.reduce((sum, t) => sum + kop(t.payed_sum), 0);
+  const paidWithBonus = closed.filter((t) => !isReturned(t)).reduce((sum, t) => sum + kop(t.payed_bonus), 0);
   return {
     exists: true,
     clientId: Number(c.client_id),
@@ -117,8 +127,8 @@ export function toLoyalty(c: PosterClientRecord, tx: PosterTransaction[], histor
     program: c.loyalty_type === "2" ? "discount" : "bonus",
     percent: Math.max(Number(c.discount_per) || 0, Number(c.client_groups_discount) || 0),
     groupName: c.client_groups_name ?? "",
-    totalPaidUah: uah(kop(c.total_payed_sum)),
-    totalWithBonusUah: uah(kop(c.total_payed_sum) + paidWithBonus),
+    totalPaidUah: uah(Math.max(0, paid)),
+    totalWithBonusUah: uah(Math.max(0, paid) + paidWithBonus),
     cardNumber: c.card_number?.trim() || c.phone_number,
     purchases: closed
       .filter((t) => Number(t.date_close) >= historyFromMs)

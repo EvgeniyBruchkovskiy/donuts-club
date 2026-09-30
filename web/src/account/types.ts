@@ -11,6 +11,8 @@ export interface Purchase {
   closedAt: string;
   totalUah: number;
   paidWithBonusUah: number;
+  /** Fiscal return printed — not counted in the totals. */
+  returned?: true;
   items?: PurchaseItem[];
 }
 

@@ -73,6 +73,20 @@ describe("getMyLoyalty", () => {
     expect(r).toMatchObject({ totalPaidUah: 1234.5, totalWithBonusUah: 1264.5 });
   });
 
+  it("marks a check with a fiscal return as returned and leaves it out of both totals", async () => {
+    const { deps, poster } = makeDeps();
+    poster.clients = [client()];
+    const now = deps.now().getTime();
+    poster.transactions = [
+      tx("kept", now - 2000, { payed_sum: "1000", payed_bonus: "500", print_fiscal: "1" }),
+      tx("back", now - 1000, { payed_sum: "6000", payed_bonus: "300", print_fiscal: "2" }),
+    ];
+    const r = await getMyLoyalty(UID, PHONE, deps);
+    if (!r.exists) throw new Error();
+    expect(r.purchases.map((p) => [p.id, p.returned])).toEqual([["back", true], ["kept", undefined]]);
+    expect(r).toMatchObject({ totalPaidUah: 1174.5, totalWithBonusUah: 1179.5 });
+  });
+
   it("gives a card-less client their phone digits as card number, for the till QR scanner", async () => {
     const { deps, poster } = makeDeps();
     poster.clients = [client({ card_number: "" })];

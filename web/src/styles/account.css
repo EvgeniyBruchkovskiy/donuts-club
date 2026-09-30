@@ -52,6 +52,8 @@
 .h-date{font-size:14px;color:var(--ink-soft)}
 .h-sum{font-size:16px;font-weight:800;color:var(--ink);text-align:right}
 .h-bonus{grid-column:1/-1;font-size:12.5px;color:var(--pink-d);font-weight:700}
+.h-returned{grid-column:1/-1;font-size:12.5px;color:var(--ink);opacity:.6;font-weight:700}
+.is-returned .h-sum{text-decoration:line-through;opacity:.5}
 .h-items{grid-column:1/-1;list-style:none;margin-top:6px;display:flex;flex-direction:column;gap:4px}
 .acc-history .h-items li{display:block;padding:0;border:none;font-size:14px;line-height:1.35;color:var(--ink)}
 .h-items b{color:var(--pink-d);font-weight:800;white-space:nowrap}
