@@ -77,7 +77,7 @@
   <section class="acc-card" data-state="join" hidden>
     <span class="eyebrow">Бонусна програма</span>
     <h1 class="acc-title">Стати учасником клубу</h1>
-    <p class="acc-sub">Вас ще немає в нашій програмі лояльності. Заповніть два поля — і накопичуйте бонуси з кожної покупки.</p>
+    <p class="acc-sub">Вас ще немає в нашій програмі лояльності. Заповніть два поля — отримайте 50&nbsp;₴ бонусами у подарунок і бонуси з кожної покупки.</p>
     <form id="joinForm" class="acc-form" novalidate>
       <label class="acc-label" for="joinName">Ім'я</label>
       <input id="joinName" class="acc-input" type="text" autocomplete="given-name" maxlength="50" placeholder="Як до вас звертатися?" required />
@@ -104,6 +104,31 @@
       <p class="acc-muted">Покажіть на касі — бонуси нарахуються автоматично</p>
       <canvas id="cabQr" class="acc-qr" width="200" height="200" aria-label="QR-код з номером телефону"></canvas>
       <p id="cabPhone" class="acc-phone-big"></p>
+    </section>
+
+    <section class="acc-card acc-rules">
+      <h2 class="acc-h2">Як працюють бонуси</h2>
+      <ol class="acc-steps">
+        <li data-program="bonus"><b>Накопичуйте.</b> <span id="rulesEarn"></span> Покажіть QR-код або назвіть номер телефону на касі.</li>
+        <li data-program="bonus"><b>Витрачайте.</b> 1 бонус = 1 ₴. Бонусами можна оплатити до 50% чеку — скажіть касиру, решту доплатите як зазвичай.</li>
+        <li data-program="bonus"><b>Ростіть.</b> 1% — з першої покупки, 3% — коли сума ваших покупок досягне 1&nbsp;500&nbsp;₴. Перехід автоматичний.
+          <span id="rulesLevel" class="acc-level" hidden><span class="acc-level-bar"><i id="rulesLevelFill"></i></span><small id="rulesLevelText"></small></span>
+        </li>
+        <li data-program="discount"><b>Знижка.</b> <span id="rulesDiscount"></span> Покажіть QR-код або назвіть номер телефону на касі.</li>
+        <li><b>Подарунки.</b> 50&nbsp;₴ бонусами за вступ до клубу і 100&nbsp;₴ у день народження 🎂</li>
+      </ol>
+      <details class="acc-terms">
+        <summary>Умови програми</summary>
+        <ul>
+          <li>1 бонус = 1 гривня. Бонуси нараховуються після оплати чеку і одразу видні в кабінеті.</li>
+          <li>Бонусами можна оплатити не більше 50% суми чеку.</li>
+          <li>Відсоток нарахування: 1% для нових учасників, 3% — після покупок на загальну суму від 1&nbsp;500&nbsp;₴.</li>
+          <li>Вітальні 50&nbsp;₴ нараховуються один раз — при вступі до клубу.</li>
+          <li>100&nbsp;₴ у день народження нараховуються раз на рік, якщо дата народження є у вашому профілі.</li>
+          <li>Бонуси не обмінюються на готівку і не передаються іншій людині.</li>
+          <li>Умови можуть змінюватися — актуальні завжди тут, у кабінеті.</li>
+        </ul>
+      </details>
     </section>
 
     <section class="acc-card">

@@ -9,6 +9,9 @@ import { formatMasked, formatNational, isComplete, isMobile, nationalDigits, toE
 import type { Loyalty } from "./types";
 
 const RESEND_SECONDS = 60;
+/** Mirrors Poster → Програми лояльності: the group switch threshold and the top bonus percent. */
+const LEVEL_UP_UAH = 1500;
+const TOP_PERCENT = 3;
 type State = "loading" | "phone" | "confirm" | "code" | "join" | "cabinet" | "failed";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -180,6 +183,13 @@ async function renderCabinet(l: Loyalty, phone = auth.currentUser?.phoneNumber ?
   $("cabBonus").textContent = uah(l.bonusUah);
   $("cabProgram").textContent =
     l.program === "discount" ? `Ваша знижка — ${l.percent}%` : `Повертаємо ${l.percent}% бонусами з кожної покупки`;
+  $("rulesEarn").textContent = `З кожної покупки повертаємо ${l.percent}% бонусами.`;
+  const toNext = LEVEL_UP_UAH - l.totalPaidUah;
+  $("rulesLevel").hidden = l.program !== "bonus" || l.percent >= TOP_PERCENT || toNext <= 0;
+  $("rulesLevelFill").style.width = `${Math.min(100, (l.totalPaidUah / LEVEL_UP_UAH) * 100)}%`;
+  $("rulesLevelText").textContent = `Ще ${uah(toNext)} покупок — і буде ${TOP_PERCENT}%`;
+  $("rulesDiscount").textContent = `Ваша знижка ${l.percent}% діє автоматично на кожну покупку.`;
+  for (const el of document.querySelectorAll<HTMLElement>("[data-program]")) el.hidden = el.dataset.program !== l.program;
   $("cabGroup").textContent = l.groupName;
   $("cabGroup").hidden = !l.groupName;
   $("cabPhone").textContent = prettyPhone(phone);
@@ -206,8 +216,10 @@ async function renderCabinet(l: Loyalty, phone = auth.currentUser?.phoneNumber ?
   }
   $("cabEmpty").hidden = l.purchases.length > 0;
 
-  if (phone) {
-    await QRCode.toCanvas($<HTMLCanvasElement>("cabQr"), phone, { width: 200, margin: 1, color: { dark: "#3B2415", light: "#ffffff" } });
+  // Poster's scanner picks a client by card number, not phone — see ensureCardNumber in functions.
+  const qr = l.cardNumber || phone.replace(/\D/g, "");
+  if (qr) {
+    await QRCode.toCanvas($<HTMLCanvasElement>("cabQr"), qr, { width: 200, margin: 1, color: { dark: "#3B2415", light: "#ffffff" } });
   }
   show("cabinet");
 }
