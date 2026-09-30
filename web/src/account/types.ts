@@ -14,7 +14,10 @@ export interface Loyalty {
   program: "bonus" | "discount";
   percent: number;
   groupName: string;
+  /** Money only (Poster's total_payed_sum) — drives the level progress. */
   totalPaidUah: number;
+  /** Money plus bonus payments — the lifetime total shown to the client. */
+  totalWithBonusUah?: number;
   /** What the cabinet QR encodes — Poster's scanner matches card numbers. */
   cardNumber: string;
   purchases: Purchase[];

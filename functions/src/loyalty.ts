@@ -5,7 +5,9 @@ import { maybeWelcome } from "./bonus/welcome.js";
 import { rateStep, type Profile, type Store } from "./store.js";
 
 export const CACHE_TTL_MS = 60_000;
-export const HISTORY_DAYS = 90;
+export const HISTORY_DAYS = 365;
+/** Transactions are fetched from here so the lifetime total can include bonus payments. */
+export const ALL_TIME_FROM = "20180101";
 export const HISTORY_LIMIT = 10;
 export const RATE = { loyalty: { limit: 20, windowMs: 60_000 }, register: { limit: 5, windowMs: 3_600_000 } };
 
@@ -25,7 +27,10 @@ export interface Loyalty {
   /** Effective percent: max(personal, group). Bonus accrual % for "bonus", discount % for "discount". */
   percent: number;
   groupName: string;
+  /** Poster's total_payed_sum: money only, bonus payments excluded. Drives the 3% level progress. */
   totalPaidUah: number;
+  /** Lifetime total shown in the cabinet: money plus bonus payments. */
+  totalWithBonusUah: number;
   /** Encoded in the cabinet QR — the till's scanner looks clients up by card number, not phone. */
   cardNumber: string;
   purchases: Purchase[];
@@ -66,7 +71,10 @@ export function toPurchase(t: PosterTransaction): Purchase {
   };
 }
 
-export function toLoyalty(c: PosterClientRecord, tx: PosterTransaction[]): Loyalty {
+/** `historyFromMs`: purchases closed before it are left out of the list but still count in the total. */
+export function toLoyalty(c: PosterClientRecord, tx: PosterTransaction[], historyFromMs: number): Loyalty {
+  const closed = tx.filter((t) => t.client_id === c.client_id && t.status === "2");
+  const paidWithBonus = closed.reduce((sum, t) => sum + kop(t.payed_bonus), 0);
   return {
     exists: true,
     clientId: Number(c.client_id),
@@ -76,9 +84,10 @@ export function toLoyalty(c: PosterClientRecord, tx: PosterTransaction[]): Loyal
     percent: Math.max(Number(c.discount_per) || 0, Number(c.client_groups_discount) || 0),
     groupName: c.client_groups_name ?? "",
     totalPaidUah: uah(kop(c.total_payed_sum)),
+    totalWithBonusUah: uah(kop(c.total_payed_sum) + paidWithBonus),
     cardNumber: c.card_number?.trim() || c.phone_number,
-    purchases: tx
-      .filter((t) => t.client_id === c.client_id && t.status === "2")
+    purchases: closed
+      .filter((t) => Number(t.date_close) >= historyFromMs)
       .sort((a, b) => Number(b.date_close) - Number(a.date_close))
       .slice(0, HISTORY_LIMIT)
       .map(toPurchase),
@@ -146,9 +155,8 @@ export async function getMyLoyalty(uid: string, digits: string, deps: Deps): Pro
       if (!profile && (await safeWelcome(uid, clientId, "linked", deps))) client = (await deps.poster.getClient(clientId)) ?? client;
     }
     client = await ensureCardNumber(client, deps);
-    const from = kyivYmd(new Date(now.getTime() - HISTORY_DAYS * 86_400_000));
-    const tx = await deps.poster.getClientTransactions(Number(client.client_id), from, kyivYmd(now));
-    result = toLoyalty(client, tx);
+    const tx = await deps.poster.getClientTransactions(Number(client.client_id), ALL_TIME_FROM, kyivYmd(now));
+    result = toLoyalty(client, tx, now.getTime() - HISTORY_DAYS * 86_400_000);
   }
   await deps.store.setCache(uid, result, now);
   return result;

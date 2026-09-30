@@ -193,7 +193,7 @@ async function renderCabinet(l: Loyalty, phone = auth.currentUser?.phoneNumber ?
   $("cabGroup").textContent = l.groupName;
   $("cabGroup").hidden = !l.groupName;
   $("cabPhone").textContent = prettyPhone(phone);
-  $("cabTotal").textContent = uah(l.totalPaidUah);
+  $("cabTotal").textContent = uah(l.totalWithBonusUah ?? l.totalPaidUah);
 
   const list = $("cabHistory");
   list.innerHTML = "";

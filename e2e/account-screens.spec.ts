@@ -14,6 +14,7 @@ const demo = {
   percent: 3,
   groupName: "Бонус 3%",
   totalPaidUah: 12345.5,
+  totalWithBonusUah: 12391,
   purchases: [
     { id: "1", closedAt: "2026-09-29T09:13:51Z", totalUah: 210, paidWithBonusUah: 0 },
     { id: "2", closedAt: "2026-09-27T15:40:00Z", totalUah: 345.5, paidWithBonusUah: 45.5 },

@@ -27,11 +27,27 @@ describe("getMyLoyalty", () => {
     poster.transactions.push(tx("other", base, { client_id: "8" }));
 
     const r = await getMyLoyalty(UID, PHONE, deps);
-    expect(r).toMatchObject({ exists: true, clientId: 7, name: "Олена", bonusUah: 53.2, totalPaidUah: 1234.5, program: "bonus", percent: 5, groupName: "Нові клієнти бонуси" });
+    expect(r).toMatchObject({ exists: true, clientId: 7, name: "Олена", bonusUah: 53.2, totalPaidUah: 1234.5, totalWithBonusUah: 1249.5, program: "bonus", percent: 5, groupName: "Нові клієнти бонуси" });
     if (!r.exists) throw new Error();
     expect(r.purchases).toHaveLength(10);
     expect(r.purchases[0]).toEqual({ id: "0", closedAt: "2026-09-29T09:00:00.000Z", totalUah: 210, paidWithBonusUah: 15 });
     expect(r.purchases.map((p) => p.id)).not.toContain("other");
+  });
+
+  it("lists only the last year, but counts older bonus payments in the lifetime total", async () => {
+    const { deps, poster } = makeDeps();
+    poster.clients = [client()];
+    const now = deps.now().getTime();
+    const day = 86_400_000;
+    poster.transactions = [
+      tx("recent", now - 364 * day, { payed_bonus: "1000" }),
+      tx("old", now - 366 * day, { payed_bonus: "2000" }),
+      tx("open", now - day, { status: "1", payed_bonus: "5000" }),
+    ];
+    const r = await getMyLoyalty(UID, PHONE, deps);
+    if (!r.exists) throw new Error();
+    expect(r.purchases.map((p) => p.id)).toEqual(["recent"]);
+    expect(r).toMatchObject({ totalPaidUah: 1234.5, totalWithBonusUah: 1264.5 });
   });
 
   it("gives a card-less client their phone digits as card number, for the till QR scanner", async () => {
