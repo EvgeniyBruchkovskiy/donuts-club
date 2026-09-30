@@ -21,6 +21,8 @@ const isEmulator = process.env.FUNCTIONS_EMULATOR === "true";
 
 /** Only our Hosting site (incl. preview channels) and local dev may call the functions. */
 const ALLOWED_ORIGINS: (string | RegExp)[] = [
+  "https://donutsclub.kr.ua",
+  "https://www.donutsclub.kr.ua",
   "https://donuts-club-krop.web.app",
   "https://donuts-club-krop.firebaseapp.com",
   /^https:\/\/donuts-club-krop--[a-z0-9-]+\.web\.app$/,
