@@ -41,6 +41,16 @@ export interface PosterTransaction {
   payed_third_party?: string;
 }
 
+/** A line of a closed check (dash.getTransactionProducts; verified 2026-09-30). */
+export interface PosterTransactionProduct {
+  product_name: string;
+  /** Chosen dish modifiers joined by ", " — e.g. "Молоко, Паперовий стакан 250 мл, Арабіка". */
+  modificator_name?: string;
+  /** Decimal string, e.g. "2.0000000"; kilograms when weight_flag is "1". */
+  num: string;
+  weight_flag?: string;
+}
+
 export interface CreateClientInput {
   client_name: string;
   client_groups_id_client: number;
@@ -60,4 +70,5 @@ export interface PosterApi {
   /** `amountUah` in hryvnias (verified: +1 adds 100 kopecks). Returns the new balance in hryvnias. */
   changeClientBonus(clientId: number, amountUah: number): Promise<number>;
   getClientTransactions(clientId: number, dateFrom: string, dateTo: string): Promise<PosterTransaction[]>;
+  getTransactionProducts(transactionId: string): Promise<PosterTransactionProduct[]>;
 }

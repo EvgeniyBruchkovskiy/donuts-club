@@ -1,4 +1,4 @@
-import type { CreateClientInput, PosterApi, PosterClientRecord, PosterTransaction } from "./types.js";
+import type { CreateClientInput, PosterApi, PosterClientRecord, PosterTransaction, PosterTransactionProduct } from "./types.js";
 
 const BASE_URL = "https://joinposter.com/api";
 
@@ -129,6 +129,10 @@ export class PosterClient implements PosterApi {
         timezone: "client",
       })) ?? []
     );
+  }
+
+  async getTransactionProducts(transactionId: string): Promise<PosterTransactionProduct[]> {
+    return (await this.request<PosterTransactionProduct[]>("dash.getTransactionProducts", { transaction_id: transactionId })) ?? [];
   }
 }
 

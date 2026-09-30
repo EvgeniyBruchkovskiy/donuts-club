@@ -30,8 +30,31 @@ describe("getMyLoyalty", () => {
     expect(r).toMatchObject({ exists: true, clientId: 7, name: "Олена", bonusUah: 53.2, totalPaidUah: 1234.5, totalWithBonusUah: 1249.5, program: "bonus", percent: 5, groupName: "Нові клієнти бонуси" });
     if (!r.exists) throw new Error();
     expect(r.purchases).toHaveLength(10);
-    expect(r.purchases[0]).toEqual({ id: "0", closedAt: "2026-09-29T09:00:00.000Z", totalUah: 210, paidWithBonusUah: 15 });
+    expect(r.purchases[0]).toEqual({ id: "0", closedAt: "2026-09-29T09:00:00.000Z", totalUah: 210, paidWithBonusUah: 15, items: [] });
     expect(r.purchases.map((p) => p.id)).not.toContain("other");
+  });
+
+  it("attaches check lines to purchases; a failed check keeps the purchase without items", async () => {
+    const { deps, poster } = makeDeps();
+    poster.clients = [client()];
+    const now = deps.now().getTime();
+    poster.transactions = [tx("a", now - 1000), tx("b", now - 2000)];
+    poster.products = {
+      a: [
+        { product_name: "Американо з молоком ", modificator_name: "Молоко, Арабіка", num: "2.0000000" },
+        { product_name: "Пончик Нутела", num: "1.0000000" },
+        { product_name: "Кава в зернах", num: "0.2500000", weight_flag: "1" },
+      ],
+    };
+    poster.failProductsFor.add("b");
+    const r = await getMyLoyalty(UID, PHONE, deps);
+    if (!r.exists) throw new Error();
+    expect(r.purchases[0]!.items).toEqual([
+      { name: "Американо з молоком", modifiers: "Молоко, Арабіка", qty: 2, byWeight: false },
+      { name: "Пончик Нутела", modifiers: "", qty: 1, byWeight: false },
+      { name: "Кава в зернах", modifiers: "", qty: 0.25, byWeight: true },
+    ]);
+    expect(r.purchases[1]).not.toHaveProperty("items");
   });
 
   it("lists only the last year, but counts older bonus payments in the lifetime total", async () => {

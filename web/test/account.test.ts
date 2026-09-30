@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { errorMessage } from "../src/account/errors";
-import { firstName, prettyPhone, purchaseDate, uah } from "../src/account/format";
+import { firstName, prettyPhone, purchaseDate, qtyLabel, uah } from "../src/account/format";
 import { formatMasked, formatNational, isComplete, isMobile, nationalDigits, toE164 } from "../src/account/phoneMask";
 
 describe("phone mask", () => {
@@ -61,6 +61,14 @@ describe("format", () => {
   it("Kyiv date", () => expect(purchaseDate("2026-09-29T09:13:51Z")).toBe("29 вересня, 12:13"));
   it("phone for the till", () => expect(prettyPhone("+380991234567")).toBe("+380 99 123 45 67"));
   it("first name", () => expect(firstName("  Олена Петрівна ")).toBe("Олена"));
+});
+
+describe("qtyLabel", () => {
+  it("hides a single piece, shows counts and kilograms", () => {
+    expect(qtyLabel(1, false)).toBe("");
+    expect(qtyLabel(2, false)).toBe("× 2");
+    expect(qtyLabel(0.25, true)).toBe("0,25 кг");
+  });
 });
 
 describe("errorMessage", () => {

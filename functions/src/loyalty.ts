@@ -1,6 +1,6 @@
 import { UserError, MSG } from "./errors.js";
 import { maskPhone } from "./phone.js";
-import type { PosterApi, PosterClientRecord, PosterTransaction } from "./poster/types.js";
+import type { PosterApi, PosterClientRecord, PosterTransaction, PosterTransactionProduct } from "./poster/types.js";
 import { maybeWelcome } from "./bonus/welcome.js";
 import { rateStep, type Profile, type Store } from "./store.js";
 
@@ -11,11 +11,22 @@ export const ALL_TIME_FROM = "20180101";
 export const HISTORY_LIMIT = 10;
 export const RATE = { loyalty: { limit: 20, windowMs: 60_000 }, register: { limit: 5, windowMs: 3_600_000 } };
 
+export interface PurchaseItem {
+  name: string;
+  /** Dish modifiers as Poster prints them, "" when none. */
+  modifiers: string;
+  qty: number;
+  /** true → qty is kilograms. */
+  byWeight: boolean;
+}
+
 export interface Purchase {
   id: string;
   closedAt: string; // ISO
   totalUah: number;
   paidWithBonusUah: number;
+  /** Missing when Poster couldn't return the check lines — the purchase is still listed. */
+  items?: PurchaseItem[];
 }
 
 export interface Loyalty {
@@ -69,6 +80,29 @@ export function toPurchase(t: PosterTransaction): Purchase {
     totalUah: uah(paid),
     paidWithBonusUah: uah(kop(t.payed_bonus)),
   };
+}
+
+export function toItem(p: PosterTransactionProduct): PurchaseItem {
+  return {
+    name: p.product_name.trim(),
+    modifiers: (p.modificator_name ?? "").trim(),
+    qty: Number(p.num) || 0,
+    byWeight: p.weight_flag === "1",
+  };
+}
+
+/** Check lines for the listed purchases, fetched in parallel. A failed check keeps its purchase, just without items. */
+export async function withItems(purchases: Purchase[], deps: Pick<Deps, "poster" | "log">): Promise<Purchase[]> {
+  return Promise.all(
+    purchases.map(async (p) => {
+      try {
+        return { ...p, items: (await deps.poster.getTransactionProducts(p.id)).map(toItem) };
+      } catch (err) {
+        deps.log("warn", "transaction products failed", { transactionId: p.id, error: err instanceof Error ? err.name : "unknown" });
+        return p;
+      }
+    }),
+  );
 }
 
 /** `historyFromMs`: purchases closed before it are left out of the list but still count in the total. */
@@ -156,7 +190,8 @@ export async function getMyLoyalty(uid: string, digits: string, deps: Deps): Pro
     }
     client = await ensureCardNumber(client, deps);
     const tx = await deps.poster.getClientTransactions(Number(client.client_id), ALL_TIME_FROM, kyivYmd(now));
-    result = toLoyalty(client, tx, now.getTime() - HISTORY_DAYS * 86_400_000);
+    const loyalty = toLoyalty(client, tx, now.getTime() - HISTORY_DAYS * 86_400_000);
+    result = { ...loyalty, purchases: await withItems(loyalty.purchases, deps) };
   }
   await deps.store.setCache(uid, result, now);
   return result;

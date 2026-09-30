@@ -4,7 +4,7 @@ import { onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber, signOut, 
 import QRCode from "qrcode";
 import { errorMessage } from "./errors";
 import { api, auth } from "./firebase";
-import { firstName, prettyPhone, purchaseDate, uah } from "./format";
+import { firstName, prettyPhone, purchaseDate, qtyLabel, uah } from "./format";
 import { formatMasked, formatNational, isComplete, isMobile, nationalDigits, toE164 } from "./phoneMask";
 import type { Loyalty } from "./types";
 
@@ -211,6 +211,29 @@ async function renderCabinet(l: Loyalty, phone = auth.currentUser?.phoneNumber ?
       b.className = "h-bonus";
       b.textContent = `з них бонусами ${uah(p.paidWithBonusUah)}`;
       li.append(b);
+    }
+    if (p.items?.length) {
+      const items = document.createElement("ul");
+      items.className = "h-items";
+      for (const it of p.items) {
+        const row = document.createElement("li");
+        const name = document.createElement("span");
+        name.textContent = it.name;
+        const qty = qtyLabel(it.qty, it.byWeight);
+        if (qty) {
+          const q = document.createElement("b");
+          q.textContent = ` ${qty}`;
+          name.append(q);
+        }
+        row.append(name);
+        if (it.modifiers) {
+          const mods = document.createElement("small");
+          mods.textContent = it.modifiers;
+          row.append(mods);
+        }
+        items.append(row);
+      }
+      li.append(items);
     }
     list.append(li);
   }

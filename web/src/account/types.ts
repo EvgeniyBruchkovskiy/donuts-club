@@ -1,9 +1,17 @@
 // Mirrors functions/src/loyalty.ts (the callable response).
+export interface PurchaseItem {
+  name: string;
+  modifiers: string;
+  qty: number;
+  byWeight: boolean;
+}
+
 export interface Purchase {
   id: string;
   closedAt: string;
   totalUah: number;
   paidWithBonusUah: number;
+  items?: PurchaseItem[];
 }
 
 export interface Loyalty {

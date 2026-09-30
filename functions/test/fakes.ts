@@ -1,5 +1,5 @@
 import type { Deps } from "../src/loyalty.js";
-import type { CreateClientInput, PosterApi, PosterClientRecord, PosterTransaction } from "../src/poster/types.js";
+import type { CreateClientInput, PosterApi, PosterClientRecord, PosterTransaction, PosterTransactionProduct } from "../src/poster/types.js";
 import { canClaim, type CacheEntry, type LedgerEntry, type LedgerOutcome, type LedgerStatus, type Profile, type RateWindow, type Store } from "../src/store.js";
 
 export function client(over: Partial<PosterClientRecord> = {}): PosterClientRecord {
@@ -77,6 +77,13 @@ export class FakePoster implements PosterApi {
   async getClientTransactions(id: number) {
     this.calls.push("getTransactions");
     return this.transactions.filter((t) => t.client_id === String(id));
+  }
+  products: Record<string, PosterTransactionProduct[]> = {};
+  failProductsFor = new Set<string>();
+  async getTransactionProducts(transactionId: string) {
+    this.calls.push("getTransactionProducts");
+    if (this.failProductsFor.has(transactionId)) throw new Error("boom");
+    return this.products[transactionId] ?? [];
   }
 }
 

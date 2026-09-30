@@ -21,6 +21,14 @@ export function prettyPhone(e164: string): string {
   return m ? `+380 ${m[1]} ${m[2]} ${m[3]} ${m[4]}` : e164;
 }
 
+const qtyFmt = new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 3 });
+
+/** 1 → "", 2 → "× 2", 0.25 kg → "0,25 кг". */
+export function qtyLabel(qty: number, byWeight: boolean): string {
+  if (byWeight) return `${qtyFmt.format(qty)} кг`;
+  return qty === 1 ? "" : `× ${qtyFmt.format(qty)}`;
+}
+
 export function firstName(full: string): string {
   return full.trim().split(/\s+/)[0] ?? "";
 }
