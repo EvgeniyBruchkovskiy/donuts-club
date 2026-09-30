@@ -44,6 +44,7 @@
 
 .acc-qr{display:block;width:200px;height:200px;margin:16px auto 10px;border-radius:14px;background:#fff;box-shadow:0 8px 18px rgba(120,60,40,.1)}
 .acc-phone-big{font-size:24px;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+.acc-confirm-phone{font-size:28px;margin:16px 0 6px;color:var(--pink-d)}
 
 .acc-history{list-style:none;margin-top:10px}
 .acc-history li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-bottom:1px dashed rgba(255,111,166,.3)}

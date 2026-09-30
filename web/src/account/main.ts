@@ -5,17 +5,17 @@ import QRCode from "qrcode";
 import { errorMessage } from "./errors";
 import { api, auth } from "./firebase";
 import { firstName, prettyPhone, purchaseDate, uah } from "./format";
-import { formatMasked, formatNational, isComplete, nationalDigits, toE164 } from "./phoneMask";
+import { formatMasked, formatNational, isComplete, isMobile, nationalDigits, toE164 } from "./phoneMask";
 import type { Loyalty } from "./types";
 
 const RESEND_SECONDS = 60;
-type State = "loading" | "phone" | "code" | "join" | "cabinet" | "failed";
+type State = "loading" | "phone" | "confirm" | "code" | "join" | "cabinet" | "failed";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
 function show(state: State) {
   document.querySelectorAll<HTMLElement>("[data-state]").forEach((el) => (el.hidden = el.dataset.state !== state));
-  const focus = { phone: "phoneInput", code: "codeInput", join: "joinName" }[state as string];
+  const focus = { phone: "phoneInput", confirm: "confirmSend", code: "codeInput", join: "joinName" }[state as string];
   if (focus) requestAnimationFrame(() => $(focus).focus());
 }
 
@@ -56,6 +56,8 @@ phoneInput.addEventListener("keydown", (e) => {
 
 let verifier: RecaptchaVerifier | null = null;
 let confirmation: ConfirmationResult | null = null;
+// Last SMS we paid for: going back and re-entering the same number reuses it instead of resending.
+let sent: { national: string; at: number } | null = null;
 
 function freshVerifier(): RecaptchaVerifier {
   verifier?.clear();
@@ -72,6 +74,7 @@ async function sendCode(btn: HTMLButtonElement, errorId: string) {
   setError(errorId, null);
   try {
     confirmation = await signInWithPhoneNumber(auth, toE164(national), freshVerifier());
+    sent = { national, at: Date.now() };
     $("codePhone").textContent = formatMasked(national);
     $<HTMLInputElement>("codeInput").value = "";
     show("code");
@@ -84,10 +87,24 @@ async function sendCode(btn: HTMLButtonElement, errorId: string) {
   }
 }
 
+const confirmBtn = $<HTMLButtonElement>("confirmSend");
+
 $("phoneForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  if (isComplete(national)) void sendCode(sendBtn, "phoneError");
+  if (!isComplete(national)) return;
+  if (!isMobile(national)) return setError("phoneError", "Перевірте код оператора — це не схоже на мобільний номер.");
+  if (confirmation && sent?.national === national && Date.now() - sent.at < RESEND_SECONDS * 1000) {
+    show("code"); // SMS for this number is already on its way
+    return;
+  }
+  $("confirmPhone").textContent = formatMasked(national);
+  setError("confirmError", null);
+  show("confirm");
 });
+
+/* ---------- confirm step: one more look before we pay for an SMS ---------- */
+confirmBtn.addEventListener("click", () => void sendCode(confirmBtn, "confirmError"));
+$("confirmEdit").addEventListener("click", () => show("phone"));
 
 /* ---------- code step ---------- */
 const codeInput = $<HTMLInputElement>("codeInput");
@@ -132,8 +149,6 @@ $("codeForm").addEventListener("submit", (e) => {
 });
 resendBtn.addEventListener("click", () => void sendCode(resendBtn, "codeError"));
 $("changePhone").addEventListener("click", () => {
-  window.clearInterval(timer);
-  confirmation = null;
   show("phone");
 });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { errorMessage } from "../src/account/errors";
 import { firstName, prettyPhone, purchaseDate, uah } from "../src/account/format";
-import { formatMasked, formatNational, isComplete, nationalDigits, toE164 } from "../src/account/phoneMask";
+import { formatMasked, formatNational, isComplete, isMobile, nationalDigits, toE164 } from "../src/account/phoneMask";
 
 describe("phone mask", () => {
   it.each([
@@ -40,6 +40,15 @@ describe("phone mask", () => {
     expect(isComplete("99123456")).toBe(false);
     expect(isComplete("091234567")).toBe(false);
     expect(toE164("991234567")).toBe("+380991234567");
+  });
+});
+
+describe("isMobile", () => {
+  it("accepts Ukrainian mobile operator codes", () => {
+    for (const n of ["501234567", "671234567", "931234567", "731234567", "991234567"]) expect(isMobile(n)).toBe(true);
+  });
+  it("rejects landline and mistyped codes", () => {
+    for (const n of ["441234567", "521234567", "111234567", "321234567"]) expect(isMobile(n)).toBe(false);
   });
 });
 

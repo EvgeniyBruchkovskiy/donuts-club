@@ -36,6 +36,16 @@ export function isComplete(national: string): boolean {
   return /^[1-9]\d{8}$/.test(national);
 }
 
+/**
+ * Ukrainian mobile operator codes (Kyivstar, Vodafone, lifecell, 3Mob, PEOPLEnet, Intertelecom).
+ * Landlines can't receive SMS, so a typo in the operator code is caught before we pay for one.
+ */
+const MOBILE_CODES = new Set(["39", "50", "63", "66", "67", "68", "73", "75", "77", "89", "91", "92", "93", "94", "95", "96", "97", "98", "99"]);
+
+export function isMobile(national: string): boolean {
+  return MOBILE_CODES.has(national.slice(0, 2));
+}
+
 export function toE164(national: string): string {
   return "+380" + national;
 }

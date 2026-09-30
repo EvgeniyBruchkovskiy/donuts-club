@@ -48,6 +48,17 @@
     <p class="acc-fine">Захищено reCAPTCHA. Надсилаємо SMS лише на українські номери.</p>
   </section>
 
+  <!-- step 1b: confirm the number before sending -->
+  <section class="acc-card acc-center" data-state="confirm" hidden>
+    <span class="eyebrow">Перевірте номер</span>
+    <h1 class="acc-title">Це ваш номер?</h1>
+    <p id="confirmPhone" class="acc-phone-big acc-confirm-phone"></p>
+    <p class="acc-sub">Надішлемо SMS з кодом саме на нього.</p>
+    <p id="confirmError" class="acc-error" role="alert" hidden></p>
+    <button id="confirmSend" class="btn btn-primary acc-btn" type="button">Так, надіслати код</button>
+    <button id="confirmEdit" class="acc-link" type="button">Ні, виправити</button>
+  </section>
+
   <!-- step 2: SMS code -->
   <section class="acc-card" data-state="code" hidden>
     <span class="eyebrow">Майже готово</span>
