@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Для персоналу — DONUTS CLUB</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.ico" sizes="48x48" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<meta name="theme-color" content="#FF6FA6" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script type="module" src="/src/staff/main.ts"></script>
+</head>
+<body class="acc-page">
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="/"><img class="logo logo-full" src="/img/logofull.webp" width="483" height="520" alt="DONUTS CLUB"><span class="wm-wrap"><span class="wm">DONUTS<b> CLUB</b></span><small class="brand-sub">Для персоналу</small></span></a>
+    <button id="logout" class="acc-back st-logout" type="button" hidden>Вийти</button>
+  </div>
+</header>
+
+<main class="acc">
+  <section class="acc-card acc-center" data-state="loading">
+    <div class="acc-spinner" aria-hidden="true">🍩</div>
+    <p class="acc-muted">Завантаження…</p>
+  </section>
+
+  <section class="acc-card" data-state="pin" hidden>
+    <span class="eyebrow">Персонал</span>
+    <h1 class="acc-title">Вхід для бариста</h1>
+    <p class="acc-sub">Введіть PIN — промокоди і відгуки гостей.</p>
+    <form id="pinForm" class="acc-form" novalidate>
+      <label class="acc-label" for="pinInput">PIN</label>
+      <input id="pinInput" class="acc-input acc-code" type="password" inputmode="numeric" autocomplete="current-password" maxlength="12" placeholder="••••••" />
+      <p id="pinError" class="acc-error" role="alert" hidden></p>
+      <button id="pinSubmit" class="btn btn-primary acc-btn" type="submit">Увійти</button>
+    </form>
+  </section>
+
+  <div class="acc-stack" data-state="panel" hidden>
+    <div class="st-tabs" role="tablist">
+      <button class="st-tab" role="tab" data-tab="promo" aria-selected="true">Промокод</button>
+      <button class="st-tab" role="tab" data-tab="reviews" aria-selected="false">Відгуки</button>
+    </div>
+
+    <section class="acc-card" data-tab-panel="promo">
+      <h2 class="acc-h2">Перевірити промокод</h2>
+      <p class="acc-muted">Код на безкоштовний пончик — гість показує його на телефоні.</p>
+      <form id="codeForm" class="acc-form" novalidate>
+        <input id="codeInput" class="acc-input st-code-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="10" placeholder="ABC234" aria-label="Промокод" />
+        <p id="codeError" class="acc-error" role="alert" hidden></p>
+        <button id="checkBtn" class="btn btn-primary acc-btn" type="submit">Перевірити</button>
+      </form>
+      <div id="codeResult" class="st-result" hidden>
+        <p id="codeStatus" class="st-status"></p>
+        <p id="codeMeta" class="st-meta"></p>
+        <button id="redeemBtn" class="btn btn-primary acc-btn" type="button" hidden>Погасити — видати пончик</button>
+      </div>
+    </section>
+
+    <div class="acc-stack" data-tab-panel="reviews" hidden>
+      <section class="acc-card st-stats">
+        <div><b id="statCount">—</b><small>відгуків за 30 днів</small></div>
+        <div><b id="statClean">—</b><small>чистота</small></div>
+        <div><b id="statStaff">—</b><small>бариста</small></div>
+      </section>
+      <p id="reviewsError" class="acc-error" role="alert" hidden></p>
+      <p id="reviewsEmpty" class="acc-muted acc-center" hidden>Відгуків ще немає.</p>
+      <ul id="reviewsList" class="st-list"></ul>
+      <button id="reviewsReload" class="btn btn-ghost acc-btn" type="button">Оновити</button>
+    </div>
+  </div>
+</main>
+</body>
+</html>

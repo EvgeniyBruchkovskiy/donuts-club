@@ -1,5 +1,5 @@
-import { Timestamp, type Firestore } from "firebase-admin/firestore";
-import { canClaim, type CacheEntry, type LedgerEntry, type LedgerOutcome, type LedgerStatus, type Profile, type RateWindow, type Store } from "./store.js";
+import { Timestamp, type DocumentData, type Firestore } from "firebase-admin/firestore";
+import { canClaim, type CacheEntry, type Feedback, type LedgerEntry, type LedgerOutcome, type LedgerStatus, type Profile, type Promo, type RateWindow, type Store } from "./store.js";
 
 // Collections (all closed to clients by firestore.rules; Admin SDK bypasses rules):
 //   profiles/{uid}          uid → Poster client_id
@@ -7,6 +7,8 @@ import { canClaim, type CacheEntry, type LedgerEntry, type LedgerOutcome, type L
 //   rateLimits/{kind:uid}   fixed-window counters
 //   config/bonusRules       bonus rules (owner edits in the console; disabled by default)
 //   bonusLedger/{uid_rule_period}  one entry per accrual — the idempotency journal
+//   feedback/{auto}         guest reviews from /feedback
+//   promos/{code}           free-donut codes; promoByPhone/{380…} → latest code of that phone
 export class FirestoreStore implements Store {
   constructor(private readonly db: Firestore) {}
 
@@ -70,4 +72,74 @@ export class FirestoreStore implements Store {
       return allowed;
     });
   }
+
+  async addFeedback(f: Feedback): Promise<void> {
+    await this.db.collection("feedback").add({ ...f, createdAt: Timestamp.fromDate(f.createdAt) });
+  }
+
+  async listFeedback(limit: number): Promise<(Feedback & { id: string })[]> {
+    const q = await this.db.collection("feedback").orderBy("createdAt", "desc").limit(limit).get();
+    return q.docs.map((d) => ({ ...(d.data() as Feedback), id: d.id, createdAt: (d.get("createdAt") as Timestamp).toDate() }));
+  }
+
+  async claimPromo(phone: string, code: string, make: (prev: Promo | null) => Promo | null) {
+    const byPhone = this.db.doc(`promoByPhone/${phone}`);
+    return this.db.runTransaction(async (tx) => {
+      const link = await tx.get(byPhone);
+      const prevSnap = link.exists ? await tx.get(this.db.doc(`promos/${link.get("code")}`)) : null;
+      const prev = prevSnap?.exists ? toPromo(prevSnap.data()!) : null;
+      const created = make(prev);
+      if (!created) return { prev, created: null };
+      const ref = this.db.doc(`promos/${code}`);
+      if ((await tx.get(ref)).exists) return "collision" as const;
+      tx.create(ref, fromPromo(created));
+      tx.set(byPhone, { code });
+      return { prev, created };
+    });
+  }
+
+  async getPromo(code: string): Promise<Promo | null> {
+    const s = await this.db.doc(`promos/${code}`).get();
+    return s.exists ? toPromo(s.data()!) : null;
+  }
+
+  async getPromos(codes: string[]): Promise<Map<string, Promo>> {
+    const out = new Map<string, Promo>();
+    if (!codes.length) return out;
+    const snaps = await this.db.getAll(...codes.map((c) => this.db.doc(`promos/${c}`)));
+    for (const s of snaps) if (s.exists) out.set(s.id, toPromo(s.data()!));
+    return out;
+  }
+
+  async redeemPromo(code: string, when: (prev: Promo | null) => Date | null): Promise<Promo | null> {
+    const ref = this.db.doc(`promos/${code}`);
+    return this.db.runTransaction(async (tx) => {
+      const s = await tx.get(ref);
+      const prev = s.exists ? toPromo(s.data()!) : null;
+      const at = when(prev);
+      if (!prev || !at) return prev;
+      tx.update(ref, { redeemedAt: Timestamp.fromDate(at) });
+      return { ...prev, redeemedAt: at };
+    });
+  }
+}
+
+function toPromo(d: DocumentData): Promo {
+  return {
+    code: d.code,
+    phone: d.phone,
+    name: d.name ?? "",
+    issuedAt: (d.issuedAt as Timestamp).toDate(),
+    expiresAt: (d.expiresAt as Timestamp).toDate(),
+    ...(d.redeemedAt ? { redeemedAt: (d.redeemedAt as Timestamp).toDate() } : {}),
+  };
+}
+
+function fromPromo(p: Promo) {
+  return {
+    ...p,
+    issuedAt: Timestamp.fromDate(p.issuedAt),
+    expiresAt: Timestamp.fromDate(p.expiresAt),
+    ...(p.redeemedAt ? { redeemedAt: Timestamp.fromDate(p.redeemedAt) } : {}),
+  };
 }

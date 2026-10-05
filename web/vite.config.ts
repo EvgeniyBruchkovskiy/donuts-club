@@ -1,10 +1,13 @@
 import { defineConfig, type Plugin } from "vite";
 import { resolve } from "node:path";
 
-/** Dev/preview: serve /account like Firebase Hosting's cleanUrls does. */
+const PAGES = ["account", "feedback", "staff"];
+
+/** Dev/preview: serve /account, /feedback, /staff like Firebase Hosting's cleanUrls does. */
 const cleanUrls = (): Plugin => {
   const rewrite = (req: { url?: string }, _res: unknown, next: () => void) => {
-    if (req.url === "/account" || req.url?.startsWith("/account?")) req.url = req.url.replace("/account", "/account.html");
+    const m = /^\/([a-z]+)(\?.*)?$/.exec(req.url ?? "");
+    if (m && PAGES.includes(m[1])) req.url = `/${m[1]}.html${m[2] ?? ""}`;
     next();
   };
   return {
@@ -21,7 +24,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, "index.html"),
-        account: resolve(import.meta.dirname, "account.html"),
+        ...Object.fromEntries(PAGES.map((p) => [p, resolve(import.meta.dirname, `${p}.html`)])),
       },
     },
   },

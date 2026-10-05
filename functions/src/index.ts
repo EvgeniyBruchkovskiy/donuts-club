@@ -11,12 +11,15 @@ import { getMyLoyalty as getMyLoyaltyImpl, type Deps } from "./loyalty.js";
 import { normalizePhone } from "./phone.js";
 import { PosterClient, PosterError } from "./poster/client.js";
 import { runBirthdayBonuses } from "./bonus/birthday.js";
+import { ipKey, staffAction as staffActionImpl, submitFeedback as submitFeedbackImpl, type FeedbackDeps } from "./feedback.js";
 import { registerMe as registerMeImpl } from "./register.js";
 
 initializeApp();
 setGlobalOptions({ region: "europe-central2", maxInstances: 5 });
 
 const POSTER_TOKEN = defineSecret("POSTER_TOKEN");
+/** PIN of the barista page /staff (set with `firebase functions:secrets:set STAFF_PIN`). */
+const STAFF_PIN = defineSecret("STAFF_PIN");
 const isEmulator = process.env.FUNCTIONS_EMULATOR === "true";
 
 /** Only our Hosting site (incl. preview channels) and local dev may call the functions. */
@@ -46,6 +49,21 @@ function deps(): Deps {
     now: () => new Date(),
     log,
   };
+}
+
+function feedbackDeps(): FeedbackDeps {
+  return {
+    store: new FirestoreStore(getFirestore()),
+    now: () => new Date(),
+    log: (level, message, data) => logger[level](message, data),
+  };
+}
+
+/** Client IP behind Google's front end (first hop of X-Forwarded-For), hashed before use. */
+function clientIp(req: CallableRequest): string {
+  const fwd = req.rawRequest.headers["x-forwarded-for"];
+  const first = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(",")[0]?.trim();
+  return ipKey(first || req.rawRequest.ip);
 }
 
 /** The phone comes only from the verified ID token, never from request data. */
@@ -85,6 +103,16 @@ export const registerMe = onCall(callableOpts, (req) =>
     const { uid, digits } = caller(req);
     return registerMeImpl(uid, digits, req.data, deps());
   }),
+);
+
+/** Guest review from /feedback — no sign-in; App Check + per-IP limit keep bots out. */
+export const submitFeedback = onCall({ ...callableOpts, secrets: [] }, (req) =>
+  run("submitFeedback", () => submitFeedbackImpl(req.data, clientIp(req), feedbackDeps())),
+);
+
+/** Barista page /staff: check and redeem free-donut codes, read reviews. PIN-protected. */
+export const staffAction = onCall({ ...callableOpts, secrets: [STAFF_PIN] }, (req) =>
+  run("staffAction", () => staffActionImpl(req.data, clientIp(req), STAFF_PIN.value(), feedbackDeps())),
 );
 
 /**

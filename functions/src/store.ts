@@ -34,6 +34,27 @@ export interface LedgerOutcome {
 
 export type LedgerStatus = "pending" | LedgerOutcome["status"];
 
+/** A guest review from /feedback. `phone` is the digits-only 380… form (not verified by SMS). */
+export interface Feedback {
+  clean: number;
+  staff: number;
+  comment: string;
+  name?: string;
+  phone?: string;
+  promoCode?: string;
+  createdAt: Date;
+}
+
+/** Free-donut code given for a review with contacts; the barista redeems it once on /staff. */
+export interface Promo {
+  code: string;
+  phone: string;
+  name: string;
+  issuedAt: Date;
+  expiresAt: Date;
+  redeemedAt?: Date;
+}
+
 export interface Store {
   getProfile(uid: string): Promise<Profile | null>;
   setProfile(uid: string, profile: Profile): Promise<void>;
@@ -49,6 +70,18 @@ export interface Store {
   findUidByClientId(clientId: number): Promise<string | null>;
   /** Atomically applies `step` to the stored window; returns whether the call is allowed. */
   hitRateLimit(key: string, step: (prev: RateWindow | null) => { allowed: boolean; next: RateWindow }): Promise<boolean>;
+  addFeedback(f: Feedback): Promise<void>;
+  /** Newest first. */
+  listFeedback(limit: number): Promise<(Feedback & { id: string })[]>;
+  /**
+   * Atomically reads the phone's latest promo and, if `make` returns one, stores it as `code` and makes it the
+   * phone's latest. "collision" — `code` is already taken (the caller retries with another).
+   */
+  claimPromo(phone: string, code: string, make: (prev: Promo | null) => Promo | null): Promise<{ prev: Promo | null; created: Promo | null } | "collision">;
+  getPromo(code: string): Promise<Promo | null>;
+  getPromos(codes: string[]): Promise<Map<string, Promo>>;
+  /** Atomically sets `redeemedAt` to what `when` returns (null — leave as is); returns the promo after that. */
+  redeemPromo(code: string, when: (prev: Promo | null) => Date | null): Promise<Promo | null>;
 }
 
 /** Fixed-window limiter step (pure — unit tested). */
