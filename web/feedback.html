@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Залишити відгук — DONUTS CLUB</title>
-<meta name="description" content="Розкажіть, як вам у DONUTS CLUB, — і отримайте пончик у подарунок." />
+<meta name="description" content="Розкажіть, як вам у DONUTS CLUB, — ми читаємо кожен відгук." />
 <link rel="icon" href="/favicon.ico" sizes="48x48" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -47,49 +47,31 @@
     </form>
   </section>
 
-  <!-- step 2: optional contacts → free donut -->
+  <!-- step 2: optional contacts -->
   <section class="acc-card" data-state="contacts" hidden>
-    <span class="eyebrow">Подарунок 🎁</span>
-    <h1 class="acc-title">Пончик за відгук</h1>
-    <p class="acc-sub">Залиште ім'я і номер — і отримайте промокод на безкоштовний пончик. А якщо щось було не так, ми зможемо з вами зв'язатися.</p>
+    <span class="eyebrow">Майже готово</span>
+    <h1 class="acc-title">Залишите контакт?</h1>
+    <p class="acc-sub">Якщо хочете, щоб ми зв'язалися з вами щодо відгуку, — вкажіть ім'я і номер. Це необов'язково.</p>
     <form id="contactsForm" class="acc-form" novalidate>
-      <label class="acc-label" for="fbName">Ім'я</label>
+      <label class="acc-label" for="fbName">Ім'я <span class="acc-muted">(необов'язково)</span></label>
       <input id="fbName" class="acc-input" type="text" autocomplete="given-name" maxlength="50" placeholder="Як до вас звертатися?" />
-      <label class="acc-label" for="fbPhone">Номер телефону</label>
+      <label class="acc-label" for="fbPhone">Номер телефону <span class="acc-muted">(необов'язково)</span></label>
       <div class="acc-phone-wrap">
         <span class="acc-prefix" aria-hidden="true">+380</span>
         <input id="fbPhone" class="acc-input acc-phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(__) ___ __ __" aria-label="Номер телефону після +380" />
       </div>
-      <p class="acc-fine acc-hint">Номер потрібен лише для промокоду і щоб зв'язатися щодо відгуку. Без реклами та розсилок.</p>
+      <p class="acc-fine acc-hint">Використаємо номер лише щоб зв'язатися щодо відгуку. Без реклами та розсилок.</p>
       <p id="contactsError" class="acc-error" role="alert" hidden></p>
-      <button id="sendWithContacts" class="btn btn-primary acc-btn" type="submit">Отримати пончик 🍩</button>
-      <button id="sendAnonymous" class="acc-link fb-skip" type="button">Надіслати без контактів</button>
+      <button id="sendFeedback" class="btn btn-primary acc-btn" type="submit">Надіслати відгук</button>
     </form>
     <button id="backToSurvey" class="acc-link fb-back" type="button">← Назад до відгуку</button>
   </section>
 
-  <!-- result: promo code -->
-  <section class="acc-card acc-center" data-state="promo" hidden>
-    <span class="eyebrow">Дякуємо за відгук!</span>
-    <h1 class="acc-title">Ваш пончик чекає 🍩</h1>
-    <p id="promoRepeat" class="acc-sub fb-note" hidden>Ви вже отримували промокод цього місяця — ось він ще раз.</p>
-    <div class="fb-code-box">
-      <p class="fb-code-label">Промокод</p>
-      <p id="promoCode" class="fb-code"></p>
-      <p id="promoUntil" class="fb-until"></p>
-    </div>
-    <p class="acc-sub">Покажіть цей код баристі — і обирайте пончик з вітрини безкоштовно.</p>
-    <p class="acc-fine">Один код — один пончик з тих, що є в наявності. Якщо улюбленого смаку сьогодні немає — код діє до кінця терміну, заходьте іншого дня. Зробіть скріншот, щоб не загубити.</p>
-    <p id="promoSorry" class="acc-sub fb-sorry" hidden>Нам шкода, що цього разу щось пішло не так. Ми розберемося, а якщо знадобляться деталі — зателефонуємо.</p>
-    <a href="/" class="btn btn-ghost acc-btn">На сайт</a>
-  </section>
-
-  <!-- result: thanks (no contacts, or a donut already used this month) -->
+  <!-- result: thanks -->
   <section class="acc-card acc-center" data-state="thanks" hidden>
     <div id="thanksIcon" class="acc-spinner acc-still" aria-hidden="true">💖</div>
     <h1 id="thanksTitle" class="acc-title"></h1>
     <p id="thanksText" class="acc-sub"></p>
-    <p id="thanksWait" class="acc-fine" hidden></p>
     <a href="/" class="btn btn-primary acc-btn">На сайт</a>
   </section>
 </main>

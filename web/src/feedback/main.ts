@@ -6,12 +6,12 @@ import { errorMessage } from "../account/errors";
 import { formatNational, isComplete, isMobile, nationalDigits, toE164 } from "../account/phoneMask";
 import { functions } from "../lib/firebaseApp";
 import { initStars } from "./stars";
-import { shortDate, thanksCopy, type SubmitResult } from "./copy";
+import { thanksCopy } from "./copy";
 
-type State = "survey" | "contacts" | "promo" | "thanks";
+type State = "survey" | "contacts" | "thanks";
 type Payload = { clean: number; staff: number; comment: string; name?: string; phone?: string };
 
-const submit = httpsCallable<Payload, SubmitResult>(functions, "submitFeedback");
+const submit = httpsCallable<Payload, { ok: true }>(functions, "submitFeedback");
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
 function show(state: State) {
@@ -61,61 +61,48 @@ phoneInput.addEventListener("keydown", (e) => {
 $("fbName").addEventListener("input", () => setError("contactsError", null));
 $("backToSurvey").addEventListener("click", () => show("survey"));
 
-const withBtn = $<HTMLButtonElement>("sendWithContacts");
-const anonBtn = $<HTMLButtonElement>("sendAnonymous");
+const sendBtn = $<HTMLButtonElement>("sendFeedback");
 
-async function send(withContacts: boolean) {
+async function send() {
   const payload: Payload = { ...ratings, comment: $<HTMLTextAreaElement>("fbComment").value.trim() };
   const name = $<HTMLInputElement>("fbName").value.trim();
-  if (withContacts) {
-    if (name.length < 2) return setError("contactsError", "Вкажіть, як до вас звертатися.");
-    if (!isComplete(national) || !isMobile(national)) return setError("contactsError", "Перевірте номер телефону — потрібен український мобільний.");
+  if (name) {
+    if (name.length < 2) return setError("contactsError", "Ім'я — щонайменше 2 літери.");
     payload.name = name;
+  }
+  if (national) {
+    if (!isComplete(national) || !isMobile(national)) return setError("contactsError", "Перевірте номер телефону — потрібен український мобільний.");
     payload.phone = toE164(national);
   }
-  const btn = withContacts ? withBtn : anonBtn;
-  withBtn.disabled = anonBtn.disabled = true;
-  btn.classList.add("is-busy");
+  sendBtn.disabled = true;
+  sendBtn.classList.add("is-busy");
   setError("contactsError", null);
   try {
-    const { data } = await submit(payload);
-    renderResult(data, withContacts);
+    await submit(payload);
+    renderThanks(!!payload.phone);
   } catch (err) {
     setError("contactsError", err);
   } finally {
-    withBtn.disabled = anonBtn.disabled = false;
-    btn.classList.remove("is-busy");
+    sendBtn.disabled = false;
+    sendBtn.classList.remove("is-busy");
   }
 }
 
 $("contactsForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  void send(true);
+  void send();
 });
-anonBtn.addEventListener("click", () => void send(false));
 
 /* ---------- result ---------- */
-function renderResult(r: SubmitResult, withContacts: boolean) {
-  const unhappy = Math.min(ratings.clean, ratings.staff) <= 3;
-  if (r.promo) {
-    $("promoCode").textContent = r.promo.code;
-    $("promoUntil").textContent = `Дійсний до ${shortDate(r.promo.expiresAt)}`;
-    $("promoRepeat").hidden = !r.promo.repeat;
-    $("promoSorry").hidden = !unhappy;
-    return show("promo");
-  }
-  const copy = thanksCopy(unhappy, withContacts);
+function renderThanks(withContacts: boolean) {
+  const copy = thanksCopy(Math.min(ratings.clean, ratings.staff) <= 3, withContacts);
   $("thanksIcon").textContent = copy.icon;
   $("thanksTitle").textContent = copy.title;
   $("thanksText").textContent = copy.text;
-  $("thanksWait").hidden = !r.nextPromoAt;
-  if (r.nextPromoAt) {
-    $("thanksWait").textContent = `Пончик за відгук можна отримати раз на 30 днів — наступний чекатиме на вас з ${shortDate(r.nextPromoAt)}.`;
-  }
   show("thanks");
 }
 
 // Dev-only hook for visual checks of every screen (stripped from production builds).
 if (import.meta.env.DEV) {
-  Object.assign(window, { __feedback: { show, renderResult, setError, ratings } });
+  Object.assign(window, { __feedback: { show, renderThanks, setError, ratings } });
 }

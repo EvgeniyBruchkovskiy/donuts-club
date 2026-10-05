@@ -6,13 +6,11 @@ import { errorMessage } from "../account/errors";
 import { prettyPhone, purchaseDate } from "../account/format";
 import { functions } from "../lib/firebaseApp";
 
-type PromoStatus = "valid" | "used" | "expired";
-interface PromoView { status: PromoStatus | "missing"; code: string; name?: string; phone?: string; issuedAt?: string; expiresAt?: string; redeemedAt?: string; redeemedNow?: true }
-interface FeedbackView { id: string; createdAt: string; clean: number; staff: number; comment: string; name?: string; phone?: string; promoCode?: string; promoStatus?: PromoStatus }
+interface FeedbackView { id: string; createdAt: string; clean: number; staff: number; comment: string; name?: string; phone?: string }
 interface FeedbackList { items: FeedbackView[]; stats: { count: number; clean: number | null; staff: number | null } }
-type Req = { pin: string; action: "login" | "check" | "redeem" | "feedback"; code?: string };
+type Req = { pin: string; action: "login" | "feedback" };
 
-const call = httpsCallable<Req, { ok: true } | { promo: PromoView } | FeedbackList>(functions, "staffAction");
+const call = httpsCallable<Req, { ok: true } | FeedbackList>(functions, "staffAction");
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const PIN_KEY = "dc-staff-pin";
 
@@ -20,7 +18,7 @@ function show(state: "loading" | "pin" | "panel") {
   document.querySelectorAll<HTMLElement>("[data-state]").forEach((el) => (el.hidden = el.dataset.state !== state));
   $("logout").hidden = state !== "panel";
   if (state === "pin") requestAnimationFrame(() => $("pinInput").focus());
-  if (state === "panel") requestAnimationFrame(() => $("codeInput").focus());
+  if (state === "panel") void loadReviews();
 }
 
 /** Our server messages (wrong PIN, lockout) are Ukrainian; pass them through. */
@@ -80,79 +78,6 @@ $("pinForm").addEventListener("submit", async (e) => {
 });
 $("logout").addEventListener("click", () => logout());
 
-/* ---------- tabs ---------- */
-document.querySelectorAll<HTMLButtonElement>(".st-tab").forEach((tab) =>
-  tab.addEventListener("click", () => {
-    const name = tab.dataset.tab!;
-    document.querySelectorAll<HTMLButtonElement>(".st-tab").forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
-    document.querySelectorAll<HTMLElement>("[data-tab-panel]").forEach((p) => (p.hidden = p.dataset.tabPanel !== name));
-    if (name === "reviews") void loadReviews();
-  }),
-);
-
-/* ---------- promo ---------- */
-const codeInput = $<HTMLInputElement>("codeInput");
-const checkBtn = $<HTMLButtonElement>("checkBtn");
-const redeemBtn = $<HTMLButtonElement>("redeemBtn");
-let current = "";
-
-const STATUS: Record<PromoView["status"], string> = {
-  valid: "✅ Дійсний",
-  used: "⛔ Уже використаний",
-  expired: "⌛ Термін минув",
-  missing: "❓ Такого коду немає",
-};
-
-function renderPromo(p: PromoView, justRedeemed = false) {
-  const box = $("codeResult");
-  box.hidden = false;
-  box.className = `st-result is-${justRedeemed ? "done" : p.status}`;
-  $("codeStatus").textContent = justRedeemed ? "🍩 Погашено — видайте пончик" : STATUS[p.status];
-  const meta = $("codeMeta");
-  meta.innerHTML = "";
-  const line = (label: string, value?: string) => {
-    if (!value) return;
-    const b = document.createElement("b");
-    b.textContent = value;
-    meta.append(`${label}: `, b, document.createElement("br"));
-  };
-  if (p.status === "missing") meta.textContent = "Перевірте, чи правильно введено код.";
-  line("Гість", p.name);
-  line("Телефон", p.phone ? prettyPhone(`+${p.phone}`) : undefined);
-  line("Виданий", p.issuedAt && purchaseDate(p.issuedAt));
-  line(p.status === "expired" ? "Діяв до" : "Дійсний до", p.status !== "used" && p.expiresAt ? purchaseDate(p.expiresAt) : undefined);
-  line("Погашений", p.redeemedAt && purchaseDate(p.redeemedAt));
-  redeemBtn.hidden = p.status !== "valid";
-  current = p.code;
-}
-
-async function promoCall(action: "check" | "redeem", btn: HTMLButtonElement) {
-  const code = action === "check" ? codeInput.value : current;
-  if (!code.trim()) return setError("codeError", "Введіть код.");
-  busy(btn, true);
-  setError("codeError", null);
-  try {
-    const { data } = await call({ pin, action, code });
-    if ("promo" in data) renderPromo(data.promo, !!data.promo.redeemedNow);
-  } catch (err) {
-    if (isBadPin(err)) return logout("PIN змінився. Увійдіть знову.");
-    setError("codeError", err);
-  } finally {
-    busy(btn, false);
-  }
-}
-
-codeInput.addEventListener("input", () => {
-  codeInput.value = codeInput.value.toUpperCase();
-  $("codeResult").hidden = true;
-  setError("codeError", null);
-});
-$("codeForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  void promoCall("check", checkBtn);
-});
-redeemBtn.addEventListener("click", () => void promoCall("redeem", redeemBtn));
-
 /* ---------- reviews ---------- */
 const stars = (n: number) => "★".repeat(n) + "☆".repeat(5 - n);
 
@@ -194,12 +119,6 @@ function renderReviews({ items, stats }: FeedbackList) {
         a.textContent = prettyPhone(`+${f.phone}`);
         c.append(f.name ? " · " : "", a);
       }
-      if (f.promoCode) {
-        const chip = document.createElement("span");
-        chip.className = "st-chip" + (f.promoStatus === "used" ? " is-used" : "");
-        chip.textContent = `${f.promoCode} · ${{ valid: "не погашений", used: "погашений", expired: "прострочений" }[f.promoStatus ?? "valid"]}`;
-        c.append(chip);
-      }
       li.append(c);
     }
     list.append(li);
@@ -235,5 +154,5 @@ if (pin) {
 
 // Dev-only hook for visual checks (stripped from production builds).
 if (import.meta.env.DEV) {
-  Object.assign(window, { __staff: { show, renderPromo, renderReviews, setError } });
+  Object.assign(window, { __staff: { show, renderReviews, setError } });
 }

@@ -41,18 +41,7 @@ export interface Feedback {
   comment: string;
   name?: string;
   phone?: string;
-  promoCode?: string;
   createdAt: Date;
-}
-
-/** Free-donut code given for a review with contacts; the barista redeems it once on /staff. */
-export interface Promo {
-  code: string;
-  phone: string;
-  name: string;
-  issuedAt: Date;
-  expiresAt: Date;
-  redeemedAt?: Date;
 }
 
 export interface Store {
@@ -73,15 +62,6 @@ export interface Store {
   addFeedback(f: Feedback): Promise<void>;
   /** Newest first. */
   listFeedback(limit: number): Promise<(Feedback & { id: string })[]>;
-  /**
-   * Atomically reads the phone's latest promo and, if `make` returns one, stores it as `code` and makes it the
-   * phone's latest. "collision" — `code` is already taken (the caller retries with another).
-   */
-  claimPromo(phone: string, code: string, make: (prev: Promo | null) => Promo | null): Promise<{ prev: Promo | null; created: Promo | null } | "collision">;
-  getPromo(code: string): Promise<Promo | null>;
-  getPromos(codes: string[]): Promise<Map<string, Promo>>;
-  /** Atomically sets `redeemedAt` to what `when` returns (null — leave as is); returns the promo after that. */
-  redeemPromo(code: string, when: (prev: Promo | null) => Date | null): Promise<Promo | null>;
 }
 
 /** Fixed-window limiter step (pure — unit tested). */

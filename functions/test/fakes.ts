@@ -1,6 +1,6 @@
 import type { Deps } from "../src/loyalty.js";
 import type { CreateClientInput, PosterApi, PosterClientRecord, PosterTransaction, PosterTransactionProduct } from "../src/poster/types.js";
-import { canClaim, type CacheEntry, type Feedback, type LedgerEntry, type LedgerOutcome, type LedgerStatus, type Profile, type Promo, type RateWindow, type Store } from "../src/store.js";
+import { canClaim, type CacheEntry, type Feedback, type LedgerEntry, type LedgerOutcome, type LedgerStatus, type Profile, type RateWindow, type Store } from "../src/store.js";
 
 export function client(over: Partial<PosterClientRecord> = {}): PosterClientRecord {
   return {
@@ -130,37 +130,11 @@ export class MemoryStore implements Store {
     return allowed;
   }
   feedback: (Feedback & { id: string })[] = [];
-  promos = new Map<string, Promo>();
-  promoByPhone = new Map<string, string>();
   async addFeedback(f: Feedback) {
     this.feedback.push({ ...f, id: `f${this.feedback.length + 1}` });
   }
   async listFeedback(limit: number) {
     return [...this.feedback].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, limit);
-  }
-  async claimPromo(phone: string, code: string, make: (prev: Promo | null) => Promo | null) {
-    const latest = this.promoByPhone.get(phone);
-    const prev = latest ? (this.promos.get(latest) ?? null) : null;
-    const created = make(prev);
-    if (!created) return { prev, created: null };
-    if (this.promos.has(code)) return "collision" as const;
-    this.promos.set(code, { ...created });
-    this.promoByPhone.set(phone, code);
-    return { prev, created };
-  }
-  async getPromo(code: string) {
-    const p = this.promos.get(code);
-    return p ? { ...p } : null;
-  }
-  async getPromos(codes: string[]) {
-    return new Map(codes.filter((c) => this.promos.has(c)).map((c) => [c, { ...this.promos.get(c)! }]));
-  }
-  async redeemPromo(code: string, when: (prev: Promo | null) => Date | null) {
-    const prev = await this.getPromo(code);
-    const at = when(prev);
-    if (!prev || !at) return prev;
-    this.promos.get(code)!.redeemedAt = at;
-    return { ...prev, redeemedAt: at };
   }
 }
 
