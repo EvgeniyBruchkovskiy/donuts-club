@@ -1,16 +1,26 @@
-/* ---------- mobile nav (behaviour kept exactly as on the legacy page) ---------- */
+/* ---------- mobile nav: ☰ toggles the menu; a link, a tap outside or Esc closes it ---------- */
 export function initBurger(): void {
-  document.getElementById("burger")?.addEventListener("click", () => {
-    const n = document.querySelector<HTMLElement>(".nav-links");
-    if (!n) return;
-    n.style.display = "flex";
-    n.style.position = "absolute";
-    n.style.flexDirection = "column";
-    n.style.top = "70px";
-    n.style.right = "16px";
-    n.style.background = "#fff";
-    n.style.padding = "18px 22px";
-    n.style.borderRadius = "18px";
-    n.style.boxShadow = "0 20px 40px rgba(0,0,0,.15)";
+  const burger = document.getElementById("burger");
+  const links = document.querySelector<HTMLElement>(".nav-links");
+  if (!burger || !links) return;
+
+  const setOpen = (open: boolean): void => {
+    links.classList.toggle("open", open);
+    burger.classList.toggle("open", open);
+    burger.setAttribute("aria-expanded", String(open));
+  };
+
+  burger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(!links.classList.contains("open"));
+  });
+  links.addEventListener("click", (e) => {
+    if ((e.target as HTMLElement).closest("a")) setOpen(false);
+  });
+  document.addEventListener("click", (e) => {
+    if (links.classList.contains("open") && !links.contains(e.target as Node)) setOpen(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setOpen(false);
   });
 }
