@@ -182,8 +182,8 @@ async function renderCabinet(l: Loyalty, phone = auth.currentUser?.phoneNumber ?
   $("cabHello").textContent = name ? `Привіт, ${name}!` : "Привіт!";
   $("cabBonus").textContent = uah(l.bonusUah);
   $("cabProgram").textContent =
-    l.program === "discount" ? `Ваша знижка — ${l.percent}%` : `Повертаємо ${l.percent}% бонусами з кожної покупки`;
-  $("rulesEarn").textContent = `З кожної покупки повертаємо ${l.percent}% бонусами.`;
+    l.program === "discount" ? `Ваша знижка — ${l.percent}%` : `Повертаємо ${l.percent}% бонусами з покупок, крім акційних товарів`;
+  $("rulesEarn").textContent = `Повертаємо ${l.percent}% бонусами з покупок (крім товарів за акцією).`;
   const toNext = LEVEL_UP_UAH - l.totalPaidUah;
   $("rulesLevel").hidden = l.program !== "bonus" || l.percent >= TOP_PERCENT || toNext <= 0;
   $("rulesLevelFill").style.width = `${Math.min(100, (l.totalPaidUah / LEVEL_UP_UAH) * 100)}%`;
