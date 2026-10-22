@@ -22,7 +22,7 @@ export function walletConfig(env: NodeJS.ProcessEnv = process.env): WalletConfig
     },
     google: { issuerId: env.GOOGLE_WALLET_ISSUER_ID ?? "", classSuffix: "donuts_club" },
     siteUrl: SITE_URL,
-    images: { logo: `${SITE_URL}/img/wallet/logo-660.png`, hero: `${SITE_URL}/img/wallet/hero.png` },
+    images: { logo: `${SITE_URL}/img/wallet/logo-v2.png`, hero: `${SITE_URL}/img/wallet/hero-v2.png` },
   };
 }
 
@@ -32,5 +32,6 @@ export const BRAND = {
   address: "м. Кропивницький, вул. Гоголя, 80ж",
   /** Cream background, chocolate text, pink labels — the site's palette. */
   apple: { background: "rgb(255,246,236)", foreground: "rgb(59,36,21)", label: "rgb(255,78,147)" },
-  googleBackground: "#FF6FA6",
+  /** Same cream as the Apple card; Google picks dark text for it. */
+  googleBackground: "#FFF6EC",
 };
