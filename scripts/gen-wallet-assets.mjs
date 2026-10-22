@@ -2,7 +2,8 @@
 //   Apple (inside every .pkpass): functions/assets/wallet/{icon,logo}{,@2x,@3x}.png
 //   Apple balance strip parts:    functions/assets/wallet/strip/*.png — glyphs and labels in SF Pro Rounded,
 //                                 composed into strip.png per card by functions/src/wallet/strip.ts
-//   Google (loaded by URL):       web/public/img/wallet/{logo-660,hero}.png
+//   Google (loaded by URL):       web/public/img/wallet/{logo-v2,hero-v2}.png — new names on every redesign:
+//                                 Google caches images by URL
 // Source of truth: web/public/favicon.svg (made by gen-brand-assets.mjs) + donut photos from web/public/img.
 // Run: node scripts/gen-wallet-assets.mjs   (uses the repo's Playwright Chromium)
 import { chromium } from "playwright";
@@ -39,16 +40,16 @@ const wordmark = `<html><head><style>${sfFace(600, "Semibold")}${sfFace(800, "He
   </span>
 </body></html>`;
 
-const hero = `<html><body style="margin:0;width:1032px;height:336px;overflow:hidden;position:relative;
-  background:radial-gradient(500px 340px at 85% 0%,#FFD6E8 0%,transparent 65%),radial-gradient(420px 300px at 0% 100%,#FFEBCB 0%,transparent 60%),linear-gradient(180deg,#FFF9F2,#FFEFF5)">
-  <div style="position:absolute;inset:0;background-image:radial-gradient(#FF6FA6 1.6px,transparent 1.8px);background-size:30px 30px;opacity:.12"></div>
+// Google's hero banner: cream like the card, donuts kept well inside so no shadow is cut off.
+const hero = `<html><body style="margin:0;width:1032px;height:336px;overflow:hidden;position:relative;background:${CREAM}">
+  <div style="position:absolute;inset:0;background-image:radial-gradient(#FF6FA6 1.6px,transparent 1.8px);background-size:30px 30px;opacity:.10"></div>
   ${[
-    ["marshmallow.webp", 170, 70, 40, 12],
-    ["strawberry.webp", 230, 290, 10, -8],
-    ["mms.webp", 180, 540, 120, 6],
-    ["rainbow.webp", 210, 760, 40, -5],
+    ["marshmallow.webp", 190, 60, 70, 10],
+    ["strawberry.webp", 230, 290, 46, -8],
+    ["mms.webp", 190, 560, 84, 6],
+    ["rainbow.webp", 200, 790, 66, -5],
   ]
-    .map(([f, w, l, t, r]) => `<img src="${img(f)}" style="position:absolute;width:${w}px;left:${l}px;top:${t}px;transform:rotate(${r}deg);filter:drop-shadow(0 16px 20px rgba(94,58,36,.28))">`)
+    .map(([f, w, l, t, r]) => `<img src="${img(f)}" style="position:absolute;width:${w}px;left:${l}px;top:${t}px;transform:rotate(${r}deg);filter:drop-shadow(0 12px 14px rgba(94,58,36,.22))">`)
     .join("")}
 </body></html>`;
 
@@ -56,8 +57,8 @@ const shots = [
   // [file, html, css width, css height, scale]
   ...[1, 2, 3].map((s) => [resolve(appleDir, `icon${s > 1 ? `@${s}x` : ""}.png`), centered(29, 29, 1, CREAM), 29, 29, s]),
   ...[1, 2, 3].map((s) => [resolve(appleDir, `logo${s > 1 ? `@${s}x` : ""}.png`), wordmark, 160, 50, s]),
-  [resolve(googleDir, "logo-660.png"), centered(660, 660, 90, "#FFFFFF"), 660, 660, 1],
-  [resolve(googleDir, "hero.png"), hero, 1032, 336, 1],
+  [resolve(googleDir, "logo-v2.png"), centered(660, 660, 90, CREAM), 660, 660, 1],
+  [resolve(googleDir, "hero-v2.png"), hero, 1032, 336, 1],
 ];
 
 // Wallet sets field text light, in the system font, so the strip carries the balance, the name and the cashback

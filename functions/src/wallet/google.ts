@@ -124,6 +124,12 @@ export class GoogleWalletApi {
     this.classReady = true;
   }
 
+  /** Pushes a new design to the existing class (used by scripts/update-google-class.mjs after a redesign). */
+  async updateClass(cls: { id: string }): Promise<void> {
+    const res = await this.call("PATCH", `loyaltyClass/${cls.id}`, cls);
+    if (!res.ok) throw new GoogleWalletError(res.status, "class update");
+  }
+
   /** Updates a saved card. Returns false when the client never saved it (Google has no such object). */
   async updateObject(obj: { id: string }): Promise<boolean> {
     const res = await this.call("PUT", `loyaltyObject/${obj.id}`, obj);
