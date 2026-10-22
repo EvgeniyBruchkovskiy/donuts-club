@@ -104,6 +104,12 @@
       <p class="acc-muted">Покажіть на касі — бонуси нарахуються автоматично</p>
       <canvas id="cabQr" class="acc-qr" width="200" height="200" aria-label="QR-код з номером телефону"></canvas>
       <p id="cabPhone" class="acc-phone-big"></p>
+      <div id="walletButtons" class="acc-wallet">
+        <button id="walletApple" class="acc-wallet-btn" type="button" data-platform="apple"><small>Додати в</small>Apple Wallet</button>
+        <button id="walletGoogle" class="acc-wallet-btn" type="button" data-platform="google"><small>Додати в</small>Google Wallet</button>
+      </div>
+      <p class="acc-fine">Картка в гаманці телефону — QR завжди під рукою, баланс оновлюється сам.</p>
+      <p id="walletError" class="acc-error" role="alert" hidden></p>
     </section>
 
     <section class="acc-card acc-rules">

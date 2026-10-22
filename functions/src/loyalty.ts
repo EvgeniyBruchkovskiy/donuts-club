@@ -9,7 +9,11 @@ export const HISTORY_DAYS = 365;
 /** Transactions are fetched from here so the lifetime total can include bonus payments. */
 export const ALL_TIME_FROM = "20180101";
 export const HISTORY_LIMIT = 10;
-export const RATE = { loyalty: { limit: 20, windowMs: 60_000 }, register: { limit: 5, windowMs: 3_600_000 } };
+export const RATE = {
+  loyalty: { limit: 20, windowMs: 60_000 },
+  register: { limit: 5, windowMs: 3_600_000 },
+  wallet: { limit: 10, windowMs: 60_000 },
+};
 
 export interface PurchaseItem {
   name: string;
@@ -59,6 +63,8 @@ export interface Deps {
   store: Store;
   now: () => Date;
   log: (level: "info" | "warn" | "error", message: string, data: Record<string, unknown>) => void;
+  /** Called with the fresh Poster record whenever the cabinet loads it (keeps wallet cards in sync). Must not throw. */
+  onClientLoaded?: (client: PosterClientRecord) => Promise<void>;
 }
 
 const kop = (v: string | undefined) => Number(v ?? 0) || 0;
@@ -199,6 +205,7 @@ export async function getMyLoyalty(uid: string, digits: string, deps: Deps): Pro
       if (!profile && (await safeWelcome(uid, clientId, "linked", deps))) client = (await deps.poster.getClient(clientId)) ?? client;
     }
     client = await ensureCardNumber(client, deps);
+    await deps.onClientLoaded?.(client);
     const tx = await deps.poster.getClientTransactions(Number(client.client_id), ALL_TIME_FROM, kyivYmd(now));
     const loyalty = toLoyalty(client, tx, now.getTime() - HISTORY_DAYS * 86_400_000);
     result = { ...loyalty, purchases: await withItems(loyalty.purchases, deps) };

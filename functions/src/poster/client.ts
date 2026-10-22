@@ -131,6 +131,10 @@ export class PosterClient implements PosterApi {
     );
   }
 
+  async getTransactions(dateFrom: string, dateTo: string): Promise<PosterTransaction[]> {
+    return (await this.request<PosterTransaction[]>("dash.getTransactions", { dateFrom, dateTo, status: 2, timezone: "client" })) ?? [];
+  }
+
   async getTransactionProducts(transactionId: string): Promise<PosterTransactionProduct[]> {
     return (await this.request<PosterTransactionProduct[]>("dash.getTransactionProducts", { transaction_id: transactionId })) ?? [];
   }
