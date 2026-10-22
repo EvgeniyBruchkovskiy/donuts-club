@@ -1,5 +1,5 @@
 // Generates the wallet card images.
-//   Apple (inside every .pkpass): functions/assets/wallet/{icon,logo,strip}{,@2x,@3x}.png
+//   Apple (inside every .pkpass): functions/assets/wallet/{icon,logo}{,@2x,@3x}.png
 //   Google (loaded by URL):       web/public/img/wallet/{logo-660,hero}.png
 // Source of truth: web/public/favicon.svg (made by gen-brand-assets.mjs) + donut photos from web/public/img.
 // Run: node scripts/gen-wallet-assets.mjs   (uses the repo's Playwright Chromium)
@@ -15,6 +15,10 @@ mkdirSync(appleDir, { recursive: true });
 mkdirSync(googleDir, { recursive: true });
 
 const donut = "data:image/svg+xml;base64," + readFileSync(resolve(pub, "favicon.svg")).toString("base64");
+// SF Pro Rounded is not redistributable, so it is read from the local macOS install (as in gen-brand-assets.mjs).
+const fontDir = process.env.SF_ROUNDED_DIR ?? "/Library/Fonts";
+const sfFace = (w, name) => `@font-face{font-family:"SF Pro Rounded";font-weight:${w};src:url(data:font/otf;base64,${
+  readFileSync(resolve(fontDir, `SF-Pro-Rounded-${name}.otf`)).toString("base64")}) format("opentype")}`;
 const img = (f) => "data:image/webp;base64," + readFileSync(resolve(pub, "img", f)).toString("base64");
 
 // Card background in Apple Wallet is cream (BRAND.apple.background in functions/src/wallet/config.ts).
@@ -23,12 +27,11 @@ const CREAM = "#FFF6EC";
 const centered = (w, h, pad, bg) => `<html><body style="margin:0;width:${w}px;height:${h}px;background:${bg};display:flex;align-items:center;justify-content:center">
   <img src="${donut}" style="width:${w - 2 * pad}px;height:${h - 2 * pad}px;object-fit:contain"></body></html>`;
 
-// The balance is printed over the strip's left half, so the donuts stay on the right.
-const strip = `<html><body style="margin:0;width:375px;height:144px;overflow:hidden;position:relative;
-  background:radial-gradient(260px 200px at 100% 0%,#FFC7E0 0%,transparent 70%),linear-gradient(90deg,${CREAM} 35%,#FFE3EE)">
-  <div style="position:absolute;inset:0;background-image:radial-gradient(#FF6FA6 1.2px,transparent 1.4px);background-size:16px 16px;opacity:.12"></div>
-  <img src="${img("strawberry.webp")}" style="position:absolute;width:118px;left:250px;top:8px;transform:rotate(-8deg);filter:drop-shadow(0 8px 10px rgba(94,58,36,.25))">
-  <img src="${img("rainbow.webp")}" style="position:absolute;width:92px;left:190px;top:56px;transform:rotate(6deg);filter:drop-shadow(0 8px 10px rgba(94,58,36,.25))">
+// Apple's logo slot (max 160×50): the donut plus the site's wordmark, since Wallet text can't use our font.
+// No strip image: Wallet prints the balance over a strip in white, which vanished on our light card.
+const wordmark = `<html><head><style>${sfFace(800, "Heavy")}</style></head><body style="margin:0;width:160px;height:50px;display:flex;align-items:center;gap:6px">
+  <img src="${donut}" style="width:30px;height:30px">
+  <span style="font-family:'SF Pro Rounded';font-weight:800;font-size:16.5px;letter-spacing:-.2px;color:#3B2415;white-space:nowrap">DONUTS <span style="color:#FF4E93">CLUB</span></span>
 </body></html>`;
 
 const hero = `<html><body style="margin:0;width:1032px;height:336px;overflow:hidden;position:relative;
@@ -47,8 +50,7 @@ const hero = `<html><body style="margin:0;width:1032px;height:336px;overflow:hid
 const shots = [
   // [file, html, css width, css height, scale]
   ...[1, 2, 3].map((s) => [resolve(appleDir, `icon${s > 1 ? `@${s}x` : ""}.png`), centered(29, 29, 1, CREAM), 29, 29, s]),
-  ...[1, 2, 3].map((s) => [resolve(appleDir, `logo${s > 1 ? `@${s}x` : ""}.png`), centered(50, 50, 4, "transparent"), 50, 50, s]),
-  ...[1, 2, 3].map((s) => [resolve(appleDir, `strip${s > 1 ? `@${s}x` : ""}.png`), strip, 375, 144, s]),
+  ...[1, 2, 3].map((s) => [resolve(appleDir, `logo${s > 1 ? `@${s}x` : ""}.png`), wordmark, 160, 50, s]),
   [resolve(googleDir, "logo-660.png"), centered(660, 660, 90, "#FFFFFF"), 660, 660, 1],
   [resolve(googleDir, "hero.png"), hero, 1032, 336, 1],
 ];
@@ -57,7 +59,7 @@ const browser = await chromium.launch();
 for (const [file, html, width, height, scale] of shots) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale });
   await page.setContent(html, { waitUntil: "load" });
-  await page.screenshot({ path: file, omitBackground: html.includes("transparent;display:flex") });
+  await page.screenshot({ path: file, omitBackground: html === wordmark });
   await page.close();
 }
 await browser.close();
