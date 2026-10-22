@@ -253,6 +253,25 @@ async function renderCabinet(l: Loyalty, phone = auth.currentUser?.phoneNumber ?
   show("cabinet");
 }
 
+/* ---------- wallet cards ---------- */
+// Android users see Google first; everyone else Apple first.
+$("walletButtons").classList.toggle("is-android", /android/i.test(navigator.userAgent));
+
+async function addToWallet(btn: HTMLButtonElement) {
+  const platform = btn.dataset.platform as "apple" | "google";
+  btn.disabled = true;
+  setError("walletError", null);
+  try {
+    const { data } = await api.createWalletLink({ platform });
+    window.location.href = data.url; // .pkpass download (Apple) or the Google Wallet save page
+  } catch (err) {
+    setError("walletError", err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+for (const id of ["walletApple", "walletGoogle"]) $(id).addEventListener("click", (e) => void addToWallet(e.currentTarget as HTMLButtonElement));
+
 async function loadCabinet() {
   show("loading");
   try {

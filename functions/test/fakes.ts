@@ -1,5 +1,8 @@
 import type { Deps } from "../src/loyalty.js";
 import type { CreateClientInput, PosterApi, PosterClientRecord, PosterTransaction, PosterTransactionProduct } from "../src/poster/types.js";
+import { walletConfig } from "../src/wallet/config.js";
+import type { PushResult, WalletDeps } from "../src/wallet/service.js";
+import type { WalletPass, WalletStore } from "../src/wallet/store.js";
 import { canClaim, type CacheEntry, type Feedback, type LedgerEntry, type LedgerOutcome, type LedgerStatus, type Profile, type RateWindow, type Store } from "../src/store.js";
 
 export function client(over: Partial<PosterClientRecord> = {}): PosterClientRecord {
@@ -74,6 +77,10 @@ export class FakePoster implements PosterApi {
     c.bonus = String(Number(c.bonus) + amountUah * 100);
     return Number(c.bonus) / 100;
   }
+  async getTransactions() {
+    this.calls.push("getAllTransactions");
+    return this.transactions;
+  }
   async getClientTransactions(id: number) {
     this.calls.push("getTransactions");
     return this.transactions.filter((t) => t.client_id === String(id));
@@ -145,4 +152,82 @@ export function makeDeps(now = new Date("2026-09-29T10:00:00Z")) {
   const clock = { now };
   const deps: Deps = { poster, store, now: () => clock.now, log: (level, message, data) => logs.push({ level, message, data }) };
   return { deps, poster, store, logs, clock };
+}
+
+export class MemoryWalletStore implements WalletStore {
+  passes = new Map<string, WalletPass>();
+  downloads = new Map<string, { serial: string; expiresAt: Date }>();
+  regs = new Map<string, { deviceId: string; serial: string; pushToken: string; updatedAt: Date }>();
+  cursor: number | null = null;
+  async getPass(serial: string) {
+    return this.passes.get(serial) ?? null;
+  }
+  async getPassByClient(clientId: number) {
+    return [...this.passes.values()].find((p) => p.clientId === clientId) ?? null;
+  }
+  async savePass(p: WalletPass) {
+    this.passes.set(p.serial, p);
+  }
+  async listPasses() {
+    return [...this.passes.values()];
+  }
+  async createDownload(token: string, serial: string, expiresAt: Date) {
+    this.downloads.set(token, { serial, expiresAt });
+  }
+  async getDownload(token: string) {
+    return this.downloads.get(token) ?? null;
+  }
+  async register(deviceId: string, serial: string, pushToken: string, now: Date) {
+    const key = `${deviceId}_${serial}`;
+    const existed = this.regs.has(key);
+    this.regs.set(key, { deviceId, serial, pushToken, updatedAt: now });
+    return !existed;
+  }
+  async unregister(deviceId: string, serial: string) {
+    this.regs.delete(`${deviceId}_${serial}`);
+  }
+  async serialsForDevice(deviceId: string) {
+    return [...this.regs.values()].filter((r) => r.deviceId === deviceId).map((r) => ({ serial: r.serial, updatedAt: this.passes.get(r.serial)!.updatedAt }));
+  }
+  async pushTokensFor(serial: string) {
+    return [...this.regs.values()].filter((r) => r.serial === serial).map(({ deviceId, pushToken }) => ({ deviceId, pushToken }));
+  }
+  async forgetDevice(deviceId: string) {
+    for (const [k, r] of this.regs) if (r.deviceId === deviceId) this.regs.delete(k);
+  }
+  async getSyncCursor() {
+    return this.cursor;
+  }
+  async setSyncCursor(ms: number) {
+    this.cursor = ms;
+  }
+}
+
+export function makeWalletDeps(now = new Date("2026-10-22T10:00:00Z")) {
+  const base = makeDeps(now);
+  const wallet = new MemoryWalletStore();
+  const pushed: string[][] = [];
+  const pushResults: PushResult[] = [];
+  const googleUpdates: WalletPass[] = [];
+  const cfg = walletConfig({ APPLE_PASS_TYPE_ID: "pass.ua.donutsclub.card", APPLE_TEAM_ID: "TEAM123456", GOOGLE_WALLET_ISSUER_ID: "3388000000000000000" });
+  const deps: WalletDeps = {
+    ...base.deps,
+    wallet,
+    cfg,
+    apple: {
+      pkpass: (p) => Buffer.from(`pkpass:${p.serial}:${p.data.bonusUah}`),
+      push: async (tokens) => {
+        pushed.push(tokens);
+        return tokens.map((_, i) => pushResults[i] ?? "sent");
+      },
+    },
+    google: {
+      saveUrl: async (p) => `https://pay.google.com/gp/v/save/jwt-${p.serial}`,
+      update: async (p) => {
+        googleUpdates.push(p);
+        return true;
+      },
+    },
+  };
+  return { ...base, deps, wallet, pushed, pushResults, googleUpdates, cfg };
 }

@@ -16,5 +16,6 @@ if (useEmulators) connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWa
 
 export const api = {
   getMyLoyalty: httpsCallable<void, LoyaltyResult>(functions, "getMyLoyalty"),
+  createWalletLink: httpsCallable<{ platform: "apple" | "google" }, { url: string }>(functions, "createWalletLink"),
   registerMe: httpsCallable<{ name: string; birthday?: string }, { created: boolean; loyalty: LoyaltyResult }>(functions, "registerMe"),
 };

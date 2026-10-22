@@ -72,5 +72,7 @@ export interface PosterApi {
   /** `amountUah` in hryvnias (verified: +1 adds 100 kopecks). Returns the new balance in hryvnias. */
   changeClientBonus(clientId: number, amountUah: number): Promise<number>;
   getClientTransactions(clientId: number, dateFrom: string, dateTo: string): Promise<PosterTransaction[]>;
+  /** Closed checks of every client for the Ymd range (Kyiv dates, inclusive). */
+  getTransactions(dateFrom: string, dateTo: string): Promise<PosterTransaction[]>;
   getTransactionProducts(transactionId: string): Promise<PosterTransactionProduct[]>;
 }
