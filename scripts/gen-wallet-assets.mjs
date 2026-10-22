@@ -1,5 +1,7 @@
 // Generates the wallet card images.
 //   Apple (inside every .pkpass): functions/assets/wallet/{icon,logo}{,@2x,@3x}.png
+//   Apple balance strip parts:    functions/assets/wallet/strip/*.png — glyphs and labels in SF Pro Rounded,
+//                                 composed into strip.png per card by functions/src/wallet/strip.ts
 //   Google (loaded by URL):       web/public/img/wallet/{logo-660,hero}.png
 // Source of truth: web/public/favicon.svg (made by gen-brand-assets.mjs) + donut photos from web/public/img.
 // Run: node scripts/gen-wallet-assets.mjs   (uses the repo's Playwright Chromium)
@@ -55,7 +57,30 @@ const shots = [
   [resolve(googleDir, "hero.png"), hero, 1032, 336, 1],
 ];
 
+// Wallet sets field text in the system font at a light weight, so the balance is drawn into the strip image
+// instead: each glyph is rendered once here, in a fixed-height box, and placed side by side at runtime.
+const stripDir = resolve(appleDir, "strip");
+mkdirSync(stripDir, { recursive: true });
+const GLYPHS = "0123456789,%₴\u00A0";
+const parts = [
+  // [file stem, text, font size, weight, colour] — sizes in points; the strip is 375×144 pt
+  ...[...GLYPHS].map((ch) => [`g${ch.codePointAt(0).toString(16)}`, ch, 56, 800, "#3B2415"]),
+  ["label-bonus", "Бонусів на рахунку", 16, 600, "#FF4E93"],
+  ["label-discount", "Ваша знижка", 16, 600, "#FF4E93"],
+];
+const partHtml = (text, size, weight, color) => `<html><head><style>${sfFace(600, "Semibold")}${sfFace(800, "Heavy")}</style></head>
+  <body style="margin:0"><span id="t" style="display:inline-block;font-family:'SF Pro Rounded';font-weight:${weight};font-size:${size}px;line-height:${Math.round(size * 1.2)}px;color:${color};white-space:pre">${text}</span></body></html>`;
+
 const browser = await chromium.launch();
+for (const [stem, text, size, weight, color] of parts) {
+  for (const scale of [1, 2, 3]) {
+    const page = await browser.newPage({ viewport: { width: 600, height: 200 }, deviceScaleFactor: scale });
+    await page.setContent(partHtml(text, size, weight, color), { waitUntil: "load" });
+    await page.evaluate(() => document.fonts.ready);
+    await page.locator("#t").screenshot({ path: resolve(stripDir, `${stem}${scale > 1 ? `@${scale}x` : ""}.png`), omitBackground: true });
+    await page.close();
+  }
+}
 for (const [file, html, width, height, scale] of shots) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale });
   await page.setContent(html, { waitUntil: "load" });
@@ -63,4 +88,4 @@ for (const [file, html, width, height, scale] of shots) {
   await page.close();
 }
 await browser.close();
-console.log(`wrote ${shots.length} images`);
+console.log(`wrote ${shots.length} images and ${parts.length * 3} strip parts`);

@@ -4,7 +4,9 @@ import forge from "node-forge";
 import { describe, expect, it } from "vitest";
 import { UserError } from "../src/errors.js";
 import { getMyLoyalty } from "../src/loyalty.js";
+import { PNG } from "pngjs";
 import { buildPkpass, passJson, wwdrPem } from "../src/wallet/apple.js";
+import { fittedValue, stripImages, stripValue } from "../src/wallet/strip.js";
 import { handleAppleRequest, type WsRequest } from "../src/wallet/appleWebService.js";
 import { loyaltyObject, saveUrl, signJwt } from "../src/wallet/google.js";
 import { PASS_DESIGN, prettyCardNumber, sameCard, toPassData } from "../src/wallet/passData.js";
@@ -55,10 +57,11 @@ describe("pass data", () => {
 describe("apple pass", () => {
   const { cfg } = makeWalletDeps();
 
-  it("puts the balance in the primary field with a change message and the card number in the QR", () => {
+  it("keeps the balance as a back field with a change message and the card number in the QR", () => {
     const p = passJson(cfg, "s1", "tok", toPassData(client({ card_number: PHONE })));
-    expect(p.storeCard.primaryFields[0]).toMatchObject({ key: "bonus", value: 53.2, currencyCode: "UAH" });
-    expect(p.storeCard.primaryFields[0].changeMessage).toContain("%@");
+    expect(p.storeCard.primaryFields).toEqual([]);
+    expect(p.storeCard.backFields[0]).toMatchObject({ key: "balance", value: 53.2, currencyCode: "UAH" });
+    expect(p.storeCard.backFields[0]).toHaveProperty("changeMessage", "Бонусів на рахунку: %@");
     expect(p).not.toHaveProperty("logoText");
     expect(p.storeCard.secondaryFields.map((f) => f.value)).toEqual(["Олена", "1%"]);
     expect(p.barcodes[0]).toMatchObject({ format: "PKBarcodeFormatQR", message: PHONE });
@@ -68,7 +71,7 @@ describe("apple pass", () => {
 
   it("shows the discount for discount-program clients", () => {
     const p = passJson(cfg, "s1", "tok", toPassData(client({ loyalty_type: "2", client_groups_discount: "5" })));
-    expect(p.storeCard.primaryFields[0]).toMatchObject({ key: "discount", value: "5%" });
+    expect(p.storeCard.backFields[0]).toMatchObject({ key: "balance", label: "Ваша знижка", value: "5%" });
   });
 
   it("builds a zip whose manifest hashes every file and whose signature is a detached PKCS#7 by the pass certificate", () => {
@@ -85,6 +88,34 @@ describe("apple pass", () => {
       "Pass Type ID: pass.ua.donutsclub.card",
       "Apple Worldwide Developer Relations Certification Authority",
     ]);
+  });
+});
+
+describe("balance strip", () => {
+  it("formats the balance like the cabinet", () => {
+    const d = toPassData(client());
+    expect(stripValue({ ...d, bonusUah: 53.2 })).toBe("53,20\u00A0₴");
+    expect(stripValue({ ...d, bonusUah: 1250 })).toBe("1\u00A0250\u00A0₴");
+    expect(stripValue({ ...d, program: "discount", percent: 5 })).toBe("5%");
+  });
+
+  it("drops kopecks only when the balance would not fit", () => {
+    const d = toPassData(client());
+    expect(fittedValue({ ...d, bonusUah: 1253.4 })).toBe("1\u00A0253,40\u00A0₴");
+    expect(fittedValue({ ...d, bonusUah: 123456.78 })).toBe("123\u00A0456\u00A0₴");
+  });
+
+  it("renders a transparent strip at 1x, 2x and 3x with ink where the text goes", () => {
+    const imgs = stripImages(toPassData(client()));
+    for (const [name, scale] of [["strip.png", 1], ["strip@2x.png", 2], ["strip@3x.png", 3]] as const) {
+      const png = PNG.sync.read(Buffer.from(imgs[name]));
+      expect([png.width, png.height]).toEqual([375 * scale, 144 * scale]);
+      const alpha = (x: number, y: number) => png.data[(y * png.width + x) * 4 + 3];
+      expect(alpha(png.width - 1, png.height - 1)).toBe(0);
+      let inked = 0;
+      for (let i = 3; i < png.data.length; i += 4) if (png.data[i] > 0) inked++;
+      expect(inked).toBeGreaterThan(100 * scale * scale);
+    }
   });
 });
 
