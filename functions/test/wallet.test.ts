@@ -6,7 +6,7 @@ import { UserError } from "../src/errors.js";
 import { getMyLoyalty } from "../src/loyalty.js";
 import { PNG } from "pngjs";
 import { buildPkpass, passJson, wwdrPem } from "../src/wallet/apple.js";
-import { fittedValue, stripImages, stripValue } from "../src/wallet/strip.js";
+import { drawableName, fittedValue, stripImages, stripValue } from "../src/wallet/strip.js";
 import { handleAppleRequest, type WsRequest } from "../src/wallet/appleWebService.js";
 import { loyaltyObject, saveUrl, signJwt } from "../src/wallet/google.js";
 import { PASS_DESIGN, prettyCardNumber, sameCard, toPassData } from "../src/wallet/passData.js";
@@ -63,7 +63,8 @@ describe("apple pass", () => {
     expect(p.storeCard.backFields[0]).toMatchObject({ key: "balance", value: 53.2, currencyCode: "UAH" });
     expect(p.storeCard.backFields[0]).toHaveProperty("changeMessage", "Бонусів на рахунку: %@");
     expect(p).not.toHaveProperty("logoText");
-    expect(p.storeCard.secondaryFields.map((f) => f.value)).toEqual(["Олена", "1%"]);
+    expect(p.storeCard).not.toHaveProperty("secondaryFields");
+    expect(p.storeCard.backFields.find((f) => f.key === "name")?.value).toBe("Олена");
     expect(p.barcodes[0]).toMatchObject({ format: "PKBarcodeFormatQR", message: PHONE });
     expect(p).toMatchObject({ passTypeIdentifier: "pass.ua.donutsclub.card", teamIdentifier: "TEAM123456", serialNumber: "s1", authenticationToken: "tok" });
     expect(p.webServiceURL).toMatch(/^https:\/\/.+\/appleWallet$/);
@@ -97,6 +98,14 @@ describe("balance strip", () => {
     expect(stripValue({ ...d, bonusUah: 53.2 })).toBe("53,20\u00A0₴");
     expect(stripValue({ ...d, bonusUah: 1250 })).toBe("1\u00A0250\u00A0₴");
     expect(stripValue({ ...d, program: "discount", percent: 5 })).toBe("5%");
+  });
+
+  it("draws names in Ukrainian and Latin, drops unknown characters and cuts long names with an ellipsis", () => {
+    expect(drawableName("Олена Ґудзь-Їжак")).toBe("Олена Ґудзь-Їжак");
+    expect(drawableName("John O’Neil 🍩")).toBe("John O’Neil");
+    const long = drawableName("Олександра Костянтинівна Вишневецька-Святополк");
+    expect(long.endsWith("…")).toBe(true);
+    expect(long.length).toBeLessThan(40);
   });
 
   it("drops kopecks only when the balance would not fit", () => {

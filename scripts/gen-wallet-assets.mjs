@@ -6,7 +6,7 @@
 // Source of truth: web/public/favicon.svg (made by gen-brand-assets.mjs) + donut photos from web/public/img.
 // Run: node scripts/gen-wallet-assets.mjs   (uses the repo's Playwright Chromium)
 import { chromium } from "playwright";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
@@ -31,9 +31,12 @@ const centered = (w, h, pad, bg) => `<html><body style="margin:0;width:${w}px;he
 
 // Apple's logo slot (max 160×50): the donut plus the site's wordmark, since Wallet text can't use our font.
 // No strip image: Wallet prints the balance over a strip in white, which vanished on our light card.
-const wordmark = `<html><head><style>${sfFace(800, "Heavy")}</style></head><body style="margin:0;width:160px;height:50px;display:flex;align-items:center;gap:6px">
-  <img src="${donut}" style="width:30px;height:30px">
-  <span style="font-family:'SF Pro Rounded';font-weight:800;font-size:16.5px;letter-spacing:-.2px;color:#3B2415;white-space:nowrap">DONUTS <span style="color:#FF4E93">CLUB</span></span>
+const wordmark = `<html><head><style>${sfFace(600, "Semibold")}${sfFace(800, "Heavy")}</style></head><body style="margin:0;width:160px;height:50px;display:flex;align-items:center;gap:6px">
+  <img src="${donut}" style="width:34px;height:34px">
+  <span style="font-family:'SF Pro Rounded';white-space:nowrap">
+    <span style="display:block;font-weight:800;font-size:16.5px;line-height:17px;letter-spacing:-.2px;color:#3B2415">DONUTS <span style="color:#FF4E93">CLUB</span></span>
+    <span style="display:block;font-weight:600;font-size:7.5px;line-height:9px;letter-spacing:1.3px;color:#6b4a34;margin-top:2px">КРОПИВНИЦЬКИЙ</span>
+  </span>
 </body></html>`;
 
 const hero = `<html><body style="margin:0;width:1032px;height:336px;overflow:hidden;position:relative;
@@ -57,29 +60,47 @@ const shots = [
   [resolve(googleDir, "hero.png"), hero, 1032, 336, 1],
 ];
 
-// Wallet sets field text in the system font at a light weight, so the balance is drawn into the strip image
-// instead: each glyph is rendered once here, in a fixed-height box, and placed side by side at runtime.
+// Wallet sets field text light, in the system font, so the strip carries the balance, the name and the cashback
+// instead: each glyph is rendered once here in a fixed-height box and placed side by side at runtime (strip.ts).
 const stripDir = resolve(appleDir, "strip");
 mkdirSync(stripDir, { recursive: true });
-const GLYPHS = "0123456789,%₴\u00A0";
+const BIG = "0123456789,%₴\u00A0";
+const LETTERS = "АБВГҐДЕЄЁЖЗИІЇЙКЛМНОПРСТУЎФХЦЧШЩЪЫЬЭЮЯ";
+const SMALL = [...new Set(LETTERS + LETTERS.toLowerCase() + "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 \u00A0'’ʼ-.,%…")].join("");
+const hex = (ch) => ch.codePointAt(0).toString(16);
 const parts = [
   // [file stem, text, font size, weight, colour] — sizes in points; the strip is 375×144 pt
-  ...[...GLYPHS].map((ch) => [`g${ch.codePointAt(0).toString(16)}`, ch, 56, 800, "#3B2415"]),
+  ...[...BIG].map((ch) => [`g${hex(ch)}`, ch, 56, 800, "#3B2415"]),
+  ...[...SMALL].map((ch) => [`s${hex(ch)}`, ch, 19, 700, "#3B2415"]),
   ["label-bonus", "Бонусів на рахунку", 16, 600, "#FF4E93"],
   ["label-discount", "Ваша знижка", 16, 600, "#FF4E93"],
+  ["label-cashback", "Кешбек", 19, 600, "#FF4E93"],
 ];
-const partHtml = (text, size, weight, color) => `<html><head><style>${sfFace(600, "Semibold")}${sfFace(800, "Heavy")}</style></head>
-  <body style="margin:0"><span id="t" style="display:inline-block;font-family:'SF Pro Rounded';font-weight:${weight};font-size:${size}px;line-height:${Math.round(size * 1.2)}px;color:${color};white-space:pre">${text}</span></body></html>`;
+// Each part sits on its own line with GLYPH_PAD px of air on both sides, so its screenshot holds overhanging
+// strokes and nothing of its neighbours; metrics.json keeps the true advance width for placing it.
+const GLYPH_PAD = 4;
+const partsHtml = `<html><head><style>${sfFace(600, "Semibold")}${sfFace(700, "Bold")}${sfFace(800, "Heavy")}
+  span{display:block;width:max-content;padding:0 ${GLYPH_PAD}px;margin:0 0 8px;font-family:'SF Pro Rounded';white-space:pre}</style></head><body style="margin:0">
+  ${parts.map(([stem, text, size, weight, color]) => `<span id="${stem}" style="font-weight:${weight};font-size:${size}px;line-height:${Math.round(size * 1.2)}px;color:${color}">${text}</span>`).join("")}
+</body></html>`;
 
 const browser = await chromium.launch();
-for (const [stem, text, size, weight, color] of parts) {
-  for (const scale of [1, 2, 3]) {
-    const page = await browser.newPage({ viewport: { width: 600, height: 200 }, deviceScaleFactor: scale });
-    await page.setContent(partHtml(text, size, weight, color), { waitUntil: "load" });
-    await page.evaluate(() => document.fonts.ready);
-    await page.locator("#t").screenshot({ path: resolve(stripDir, `${stem}${scale > 1 ? `@${scale}x` : ""}.png`), omitBackground: true });
-    await page.close();
+{
+  const page = await browser.newPage();
+  await page.setContent(partsHtml, { waitUntil: "load" });
+  await page.evaluate(() => document.fonts.ready);
+  const advance = await page.evaluate((pad) => Object.fromEntries([...document.querySelectorAll("span[id]")].map((el) => [el.id, el.getBoundingClientRect().width - 2 * pad])), GLYPH_PAD);
+  writeFileSync(resolve(stripDir, "metrics.json"), JSON.stringify({ pad: GLYPH_PAD, advance }));
+  await page.close();
+}
+for (const scale of [1, 2, 3]) {
+  const page = await browser.newPage({ viewport: { width: 800, height: 600 }, deviceScaleFactor: scale });
+  await page.setContent(partsHtml, { waitUntil: "load" });
+  await page.evaluate(() => document.fonts.ready);
+  for (const [stem] of parts) {
+    await page.locator(`#${stem}`).screenshot({ path: resolve(stripDir, `${stem}${scale > 1 ? `@${scale}x` : ""}.png`), omitBackground: true });
   }
+  await page.close();
 }
 for (const [file, html, width, height, scale] of shots) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale });
