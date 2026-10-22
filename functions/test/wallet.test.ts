@@ -7,7 +7,7 @@ import { getMyLoyalty } from "../src/loyalty.js";
 import { buildPkpass, passJson, wwdrPem } from "../src/wallet/apple.js";
 import { handleAppleRequest, type WsRequest } from "../src/wallet/appleWebService.js";
 import { loyaltyObject, saveUrl, signJwt } from "../src/wallet/google.js";
-import { prettyCardNumber, sameCard, toPassData } from "../src/wallet/passData.js";
+import { PASS_DESIGN, prettyCardNumber, sameCard, toPassData } from "../src/wallet/passData.js";
 import { createWalletLink, refreshCard, runWalletSync, safeRefreshCard, SYNC_LOOKBACK_MS } from "../src/wallet/service.js";
 import { client, makeWalletDeps, tx } from "./fakes.js";
 
@@ -39,9 +39,10 @@ function testSigner() {
 describe("pass data", () => {
   it("maps a Poster client to what the card shows", () => {
     const d = toPassData(client({ card_number: PHONE, bonus: "5320" }));
-    expect(d).toEqual({ clientId: 7, name: "Олена", bonusUah: 53.2, program: "bonus", percent: 1, cardNumber: PHONE });
+    expect(d).toEqual({ clientId: 7, name: "Олена", bonusUah: 53.2, program: "bonus", percent: 1, cardNumber: PHONE, design: PASS_DESIGN });
     expect(sameCard(d, { ...d })).toBe(true);
     expect(sameCard(d, { ...d, bonusUah: 54 })).toBe(false);
+    expect(sameCard(d, { ...d, design: PASS_DESIGN - 1 })).toBe(false); // a redesign reaches cards already issued
   });
 
   it("falls back to phone digits as the card number and prints it as a phone", () => {
@@ -58,6 +59,8 @@ describe("apple pass", () => {
     const p = passJson(cfg, "s1", "tok", toPassData(client({ card_number: PHONE })));
     expect(p.storeCard.primaryFields[0]).toMatchObject({ key: "bonus", value: 53.2, currencyCode: "UAH" });
     expect(p.storeCard.primaryFields[0].changeMessage).toContain("%@");
+    expect(p).not.toHaveProperty("logoText");
+    expect(p.storeCard.secondaryFields.map((f) => f.value)).toEqual(["Олена", "1%"]);
     expect(p.barcodes[0]).toMatchObject({ format: "PKBarcodeFormatQR", message: PHONE });
     expect(p).toMatchObject({ passTypeIdentifier: "pass.ua.donutsclub.card", teamIdentifier: "TEAM123456", serialNumber: "s1", authenticationToken: "tok" });
     expect(p.webServiceURL).toMatch(/^https:\/\/.+\/appleWallet$/);
