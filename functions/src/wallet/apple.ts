@@ -27,10 +27,12 @@ export function passImages(): Record<string, Uint8Array> {
 }
 
 export function passJson(cfg: WalletConfig, serial: string, authToken: string, d: PassData) {
-  const primary =
+  // The balance itself is drawn into the strip image (strip.ts); this back field carries it as text too,
+  // and its changeMessage is what shows on the lock screen when the balance changes.
+  const balance =
     d.program === "discount"
-      ? { key: "discount", label: "Ваша знижка", value: `${d.percent}%`, changeMessage: "Ваша знижка тепер %@" }
-      : { key: "bonus", label: "Бонусів на рахунку", value: d.bonusUah, currencyCode: "UAH", changeMessage: "Бонусів на рахунку: %@" };
+      ? { key: "balance", label: "Ваша знижка", value: `${d.percent}%`, changeMessage: "Ваша знижка тепер %@" }
+      : { key: "balance", label: "Бонусів на рахунку", value: d.bonusUah, currencyCode: "UAH", changeMessage: "Бонусів на рахунку: %@" };
   return {
     formatVersion: 1,
     passTypeIdentifier: cfg.apple.passTypeId,
@@ -47,12 +49,13 @@ export function passJson(cfg: WalletConfig, serial: string, authToken: string, d
     sharingProhibited: true,
     barcodes: [{ format: "PKBarcodeFormatQR", message: d.cardNumber, messageEncoding: "iso-8859-1", altText: prettyCardNumber(d.cardNumber) }],
     storeCard: {
-      primaryFields: [primary],
+      primaryFields: [],
       secondaryFields: [
         { key: "name", label: "Учасник", value: d.name || "—" },
         ...(d.program === "bonus" ? [{ key: "level", label: "Кешбек бонусами", value: `${d.percent}%`, textAlignment: "PKTextAlignmentRight" }] : []),
       ],
       backFields: [
+        balance,
         { key: "how", label: "Як користуватися", value: "Покажіть QR-код на касі — бонуси нарахуються автоматично. 1 бонус = 1 ₴, бонусами можна оплатити до 50% чеку. На товари за акцією бонуси не нараховуються." },
         { key: "cabinet", label: "Мій кабінет", value: `${cfg.siteUrl}/account`, attributedValue: `<a href="${cfg.siteUrl}/account">Історія покупок і умови програми</a>` },
         { key: "address", label: "Адреса", value: BRAND.address },

@@ -16,6 +16,7 @@ import { registerMe as registerMeImpl } from "./register.js";
 import { buildPkpass, passImages, passJson, pushUpdates, wwdrPem, type AppleSigner } from "./wallet/apple.js";
 import { handleAppleRequest } from "./wallet/appleWebService.js";
 import { walletConfig } from "./wallet/config.js";
+import { stripImages } from "./wallet/strip.js";
 import { FirestoreWalletStore } from "./wallet/firestoreWalletStore.js";
 import { GoogleWalletApi, loyaltyClass, loyaltyObject, parseServiceAccount, saveUrl } from "./wallet/google.js";
 import { createWalletLink as createWalletLinkImpl, runWalletSync, safeRefreshCard, type WalletDeps } from "./wallet/service.js";
@@ -80,7 +81,7 @@ function walletDeps(): WalletDeps {
     wallet: new FirestoreWalletStore(getFirestore()),
     cfg,
     apple: {
-      pkpass: (p) => buildPkpass(passJson(cfg, p.serial, p.authToken, p.data), images, signer),
+      pkpass: (p) => buildPkpass(passJson(cfg, p.serial, p.authToken, p.data), { ...images, ...stripImages(p.data) }, signer),
       push: (tokens) => pushUpdates(tokens, cfg, signer),
     },
     google: {

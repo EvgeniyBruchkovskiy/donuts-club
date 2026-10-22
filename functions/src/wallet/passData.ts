@@ -1,7 +1,7 @@
 import type { PosterClientRecord } from "../poster/types.js";
 
 /** Bump when the card's look changes: cards issued with an older design then count as changed and get pushed. */
-export const PASS_DESIGN = 2;
+export const PASS_DESIGN = 3;
 
 /** Everything a wallet card shows — the same for Apple and Google. */
 export interface PassData {
