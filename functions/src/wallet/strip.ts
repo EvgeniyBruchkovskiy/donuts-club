@@ -3,16 +3,25 @@ import { PNG } from "pngjs";
 import type { PassData } from "./passData.js";
 
 /**
- * Apple Wallet sets field text in the system font at a light weight. To show the balance bold and in
- * SF Pro Rounded, it is drawn into the card's strip image instead: glyphs pre-rendered by
- * scripts/gen-wallet-assets.mjs are placed side by side on a transparent 375×144 pt canvas.
+ * Apple Wallet sets field text in the system font at a light weight. To show the balance, the name and the
+ * cashback bold and in SF Pro Rounded, they are drawn into the card's strip image instead: glyphs pre-rendered
+ * by scripts/gen-wallet-assets.mjs are placed side by side on a transparent 375×144 pt canvas.
+ *   y 12   «Бонусів на рахунку»          (pink label)
+ *   y 32   53,20 ₴                       (Heavy 56)
+ *   y 108  Олена              Кешбек 1%  (Bold 19)
  */
 const PARTS = new URL("../../assets/wallet/strip/", import.meta.url);
 const W = 375;
 const H = 144;
 const PAD_X = 19;
-const LABEL_Y = 18;
-const VALUE_Y = 44;
+const LABEL_Y = 12;
+const VALUE_Y = 32;
+const ROW_Y = 108;
+/** The name gets the row's left part; whatever doesn't fit ends in "…". */
+const NAME_MAX = 210;
+
+/** Glyph advance widths in points; each PNG has `pad` points of air on both sides (see the generator). */
+const METRICS = JSON.parse(readFileSync(new URL("metrics.json", PARTS), "utf8")) as { pad: number; advance: Record<string, number> };
 
 const cache = new Map<string, PNG>();
 function part(stem: string, scale: number): PNG {
@@ -35,6 +44,18 @@ export function stripValue(d: PassData): string {
 }
 
 const glyphStem = (ch: string) => `g${ch.codePointAt(0)!.toString(16)}`;
+const smallStem = (ch: string) => `s${ch.codePointAt(0)!.toString(16)}`;
+const SMALL_SET = new Set(Object.keys(METRICS.advance).filter((k) => /^s[0-9a-f]+$/.test(k)).map((k) => String.fromCodePoint(parseInt(k.slice(1), 16))));
+const runWidth = (stems: string[]) => stems.reduce((w, st) => w + METRICS.advance[st], 0);
+
+/** The name as the small glyph set can draw it: unknown characters dropped, cut to fit with "…". */
+export function drawableName(name: string): string {
+  const chars = [...[...name].filter((ch) => SMALL_SET.has(ch)).join("").trim().replace(/\s+/g, " ")];
+  const width = (cs: string[]) => runWidth(cs.map(smallStem));
+  if (width(chars) <= NAME_MAX) return chars.join("");
+  while (chars.length && width([...chars, "…"]) > NAME_MAX) chars.pop();
+  return chars.join("").trimEnd() + "…";
+}
 
 /** Alpha-composites `src` onto `dst` at (x, y), clipping at the edges. */
 function blit(dst: PNG, src: PNG, x: number, y: number) {
@@ -56,24 +77,30 @@ function blit(dst: PNG, src: PNG, x: number, y: number) {
   }
 }
 
-const textWidth = (text: string, scale: number) => [...text].reduce((w, ch) => w + part(glyphStem(ch), scale).width, 0);
-
 /** The value as drawn: a very large balance drops its kopecks rather than run off the card. */
-export function fittedValue(d: PassData, scale = 1): string {
+export function fittedValue(d: PassData): string {
   const full = stripValue(d);
-  if (textWidth(full, scale) <= (W - 2 * PAD_X) * scale) return full;
+  if (runWidth([...full].map(glyphStem)) <= W - 2 * PAD_X) return full;
   return stripValue({ ...d, bonusUah: Math.floor(d.bonusUah) });
+}
+
+/** Places glyphs at fractional advances (x, y in points), each image shifted left by its padding. */
+function drawRun(png: PNG, stems: string[], x: number, y: number, scale: number) {
+  for (const st of stems) {
+    blit(png, part(st, scale), Math.round((x - METRICS.pad) * scale), Math.round(y * scale));
+    x += METRICS.advance[st];
+  }
 }
 
 export function renderStrip(d: PassData, scale: number): Buffer {
   const png = new PNG({ width: W * scale, height: H * scale });
   png.data.fill(0);
-  blit(png, part(d.program === "discount" ? "label-discount" : "label-bonus", scale), PAD_X * scale, LABEL_Y * scale);
-  let x = PAD_X * scale;
-  for (const ch of fittedValue(d, scale)) {
-    const g = part(glyphStem(ch), scale);
-    blit(png, g, x, VALUE_Y * scale);
-    x += g.width;
+  drawRun(png, [d.program === "discount" ? "label-discount" : "label-bonus"], PAD_X, LABEL_Y, scale);
+  drawRun(png, [...fittedValue(d)].map(glyphStem), PAD_X, VALUE_Y, scale);
+  drawRun(png, [...drawableName(d.name)].map(smallStem), PAD_X, ROW_Y, scale);
+  if (d.program === "bonus") {
+    const run = ["label-cashback", smallStem(" "), ...[...`${d.percent}%`].map(smallStem)];
+    drawRun(png, run, W - PAD_X - runWidth(run), ROW_Y, scale);
   }
   return PNG.sync.write(png);
 }

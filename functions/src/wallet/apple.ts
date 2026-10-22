@@ -50,12 +50,10 @@ export function passJson(cfg: WalletConfig, serial: string, authToken: string, d
     barcodes: [{ format: "PKBarcodeFormatQR", message: d.cardNumber, messageEncoding: "iso-8859-1", altText: prettyCardNumber(d.cardNumber) }],
     storeCard: {
       primaryFields: [],
-      secondaryFields: [
-        { key: "name", label: "Учасник", value: d.name || "—" },
-        ...(d.program === "bonus" ? [{ key: "level", label: "Кешбек бонусами", value: `${d.percent}%`, textAlignment: "PKTextAlignmentRight" }] : []),
-      ],
+      // Name and cashback are drawn into the strip too (strip.ts); the back keeps them as text.
       backFields: [
         balance,
+        { key: "name", label: "Учасник клубу", value: d.name || "—" },
         { key: "how", label: "Як користуватися", value: "Покажіть QR-код на касі — бонуси нарахуються автоматично. 1 бонус = 1 ₴, бонусами можна оплатити до 50% чеку. На товари за акцією бонуси не нараховуються." },
         { key: "cabinet", label: "Мій кабінет", value: `${cfg.siteUrl}/account`, attributedValue: `<a href="${cfg.siteUrl}/account">Історія покупок і умови програми</a>` },
         { key: "address", label: "Адреса", value: BRAND.address },
