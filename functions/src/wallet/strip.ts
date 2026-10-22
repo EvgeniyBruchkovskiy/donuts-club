@@ -9,6 +9,7 @@ import type { PassData } from "./passData.js";
  *   y 12   «Бонусів на рахунку»          (pink label)
  *   y 32   53,20 ₴                       (Heavy 56)
  *   y 108  Олена              Кешбек 1%  (Bold 19)
+ * Donuts sit top-right: two when the balance is short, one when it is longer, none for a very long one.
  */
 const PARTS = new URL("../../assets/wallet/strip/", import.meta.url);
 const W = 375;
@@ -21,7 +22,14 @@ const ROW_Y = 108;
 const NAME_MAX = 210;
 
 /** Glyph advance widths in points; each PNG has `pad` points of air on both sides (see the generator). */
-const METRICS = JSON.parse(readFileSync(new URL("metrics.json", PARTS), "utf8")) as { pad: number; advance: Record<string, number> };
+const METRICS = JSON.parse(readFileSync(new URL("metrics.json", PARTS), "utf8")) as {
+  pad: number;
+  advance: Record<string, number>;
+  /** Sizes of donuts.png / donut.png in points, shadow included. */
+  art: Record<"donuts" | "donut", { w: number; h: number }>;
+};
+const ART_Y = 4;
+const artX = (stem: "donuts" | "donut") => W - METRICS.art[stem].w - 4;
 
 const cache = new Map<string, PNG>();
 function part(stem: string, scale: number): PNG {
@@ -84,6 +92,12 @@ export function fittedValue(d: PassData): string {
   return stripValue({ ...d, bonusUah: Math.floor(d.bonusUah) });
 }
 
+/** The biggest donut picture that won't touch the balance. */
+export function donutArt(d: PassData): "donuts" | "donut" | null {
+  const end = PAD_X + runWidth([...fittedValue(d)].map(glyphStem)) + 6;
+  return end <= artX("donuts") ? "donuts" : end <= artX("donut") ? "donut" : null;
+}
+
 /** Places glyphs at fractional advances (x, y in points), each image shifted left by its padding. */
 function drawRun(png: PNG, stems: string[], x: number, y: number, scale: number) {
   for (const st of stems) {
@@ -95,6 +109,8 @@ function drawRun(png: PNG, stems: string[], x: number, y: number, scale: number)
 export function renderStrip(d: PassData, scale: number): Buffer {
   const png = new PNG({ width: W * scale, height: H * scale });
   png.data.fill(0);
+  const art = donutArt(d);
+  if (art) blit(png, part(art, scale), artX(art) * scale, ART_Y * scale);
   drawRun(png, [d.program === "discount" ? "label-discount" : "label-bonus"], PAD_X, LABEL_Y, scale);
   drawRun(png, [...fittedValue(d)].map(glyphStem), PAD_X, VALUE_Y, scale);
   drawRun(png, [...drawableName(d.name)].map(smallStem), PAD_X, ROW_Y, scale);

@@ -79,6 +79,15 @@ const parts = [
 // Each part sits on its own line with GLYPH_PAD px of air on both sides, so its screenshot holds overhanging
 // strokes and nothing of its neighbours; metrics.json keeps the true advance width for placing it.
 const GLYPH_PAD = 4;
+// Donuts for the strip's right side, drawn inside a padded box so the whole drop shadow fits in the PNG:
+// a pair when the balance is short, one donut when it is longer.
+const donutImg = (f, w, left, top, rot) =>
+  `<img src="${img(f)}" style="position:absolute;width:${w}px;left:${left}px;top:${top}px;transform:rotate(${rot}deg);filter:drop-shadow(0 5px 6px rgba(94,58,36,.22))">`;
+const DONUTS = {
+  donuts: { w: 120, h: 100, html: donutImg("strawberry.webp", 70, 42, 6, -8) + donutImg("rainbow.webp", 56, 8, 40, 6) },
+  donut: { w: 84, h: 100, html: donutImg("strawberry.webp", 70, 7, 12, -8) },
+};
+const donutsHtml = ({ w, h, html }) => `<html><body style="margin:0;width:${w}px;height:${h}px;position:relative;overflow:hidden">${html}</body></html>`;
 const partsHtml = `<html><head><style>${sfFace(600, "Semibold")}${sfFace(700, "Bold")}${sfFace(800, "Heavy")}
   span{display:block;width:max-content;padding:0 ${GLYPH_PAD}px;margin:0 0 8px;font-family:'SF Pro Rounded';white-space:pre}</style></head><body style="margin:0">
   ${parts.map(([stem, text, size, weight, color]) => `<span id="${stem}" style="font-weight:${weight};font-size:${size}px;line-height:${Math.round(size * 1.2)}px;color:${color}">${text}</span>`).join("")}
@@ -90,7 +99,7 @@ const browser = await chromium.launch();
   await page.setContent(partsHtml, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);
   const advance = await page.evaluate((pad) => Object.fromEntries([...document.querySelectorAll("span[id]")].map((el) => [el.id, el.getBoundingClientRect().width - 2 * pad])), GLYPH_PAD);
-  writeFileSync(resolve(stripDir, "metrics.json"), JSON.stringify({ pad: GLYPH_PAD, advance }));
+  writeFileSync(resolve(stripDir, "metrics.json"), JSON.stringify({ pad: GLYPH_PAD, advance, art: Object.fromEntries(Object.entries(DONUTS).map(([k, { w, h }]) => [k, { w, h }])) }));
   await page.close();
 }
 for (const scale of [1, 2, 3]) {
@@ -101,6 +110,14 @@ for (const scale of [1, 2, 3]) {
     await page.locator(`#${stem}`).screenshot({ path: resolve(stripDir, `${stem}${scale > 1 ? `@${scale}x` : ""}.png`), omitBackground: true });
   }
   await page.close();
+}
+for (const [stem, art] of Object.entries(DONUTS)) {
+  for (const scale of [1, 2, 3]) {
+    const page = await browser.newPage({ viewport: { width: art.w, height: art.h }, deviceScaleFactor: scale });
+    await page.setContent(donutsHtml(art), { waitUntil: "load" });
+    await page.screenshot({ path: resolve(stripDir, `${stem}${scale > 1 ? `@${scale}x` : ""}.png`), omitBackground: true });
+    await page.close();
+  }
 }
 for (const [file, html, width, height, scale] of shots) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale });
