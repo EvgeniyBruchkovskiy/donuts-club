@@ -6,7 +6,7 @@ import { errorMessage } from "../account/errors";
 import { prettyPhone, purchaseDate } from "../account/format";
 import { functions } from "../lib/firebaseApp";
 
-interface FeedbackView { id: string; createdAt: string; clean: number; staff: number; comment: string; name?: string; phone?: string; hidden?: boolean }
+interface FeedbackView { id: string; createdAt: string; clean: number; staff: number; comment: string; wish?: string; name?: string; phone?: string; hidden?: boolean }
 interface FeedbackList { items: FeedbackView[]; stats: { count: number; clean: number | null; staff: number | null } }
 type Req = { pin: string; action: "login" | "feedback" } | { pin: string; action: "hide"; id: string; hidden: boolean };
 
@@ -108,6 +108,14 @@ function renderReviews({ items, stats }: FeedbackList) {
       c.className = "st-comment";
       c.textContent = f.comment;
       li.append(c);
+    }
+    if (f.wish) {
+      const w = document.createElement("p");
+      w.className = "st-wish";
+      const k = document.createElement("b");
+      k.textContent = "Побажання до меню: ";
+      w.append(k, f.wish);
+      li.append(w);
     }
     if (f.name || f.phone) {
       const c = document.createElement("p");

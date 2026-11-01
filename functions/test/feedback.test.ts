@@ -22,6 +22,11 @@ describe("validateFeedback", () => {
     });
   });
 
+  it("keeps the menu wish, trimmed, and drops an empty one", () => {
+    expect(validateFeedback({ clean: 5, staff: 5, wish: "  Веганські пончики \r\n" })).toEqual({ clean: 5, staff: 5, comment: "", wish: "Веганські пончики" });
+    expect(validateFeedback({ clean: 5, staff: 5, wish: "   " })).toEqual({ clean: 5, staff: 5, comment: "" });
+  });
+
   it("accepts a phone without a name", () => {
     expect(validateFeedback({ clean: 5, staff: 5, phone: "0991234567" })).toMatchObject({ phone: "380991234567" });
   });
@@ -35,6 +40,8 @@ describe("validateFeedback", () => {
     { clean: "5", staff: 5 },
     { clean: 5, staff: 5, comment: 42 },
     { clean: 5, staff: 5, comment: "x".repeat(1001) },
+    { clean: 5, staff: 5, wish: "x".repeat(501) },
+    { clean: 5, staff: 5, wish: 7 },
     { clean: 5, staff: 5, name: "<b>" },
     { clean: 5, staff: 5, name: "Олена", phone: "+1 202 555 0100" },
   ])("rejects %j", (input) => {
@@ -70,12 +77,12 @@ describe("staffAction", () => {
     const { deps, store } = makeDeps(NOW);
     await store.addFeedback({ clean: 1, staff: 1, comment: "old", createdAt: new Date(NOW.getTime() - 40 * DAY) });
     await store.addFeedback({ clean: 4, staff: 5, comment: "", createdAt: new Date(NOW.getTime() - 2 * DAY) });
-    await store.addFeedback({ clean: 5, staff: 4, comment: "Супер", name: "Олена", phone: "380991234567", createdAt: NOW });
+    await store.addFeedback({ clean: 5, staff: 4, comment: "Супер", wish: "Матчу", name: "Олена", phone: "380991234567", createdAt: NOW });
 
     const r = await staffAction({ pin: PIN, action: "feedback" }, IP, PIN, deps);
     if (!("items" in r)) throw new Error("expected a list");
     expect(r.items.map((f) => f.comment)).toEqual(["Супер", "", "old"]);
-    expect(r.items[0]).toEqual({ id: "f3", createdAt: NOW.toISOString(), clean: 5, staff: 4, comment: "Супер", name: "Олена", phone: "380991234567" });
+    expect(r.items[0]).toEqual({ id: "f3", createdAt: NOW.toISOString(), clean: 5, staff: 4, comment: "Супер", wish: "Матчу", name: "Олена", phone: "380991234567" });
     expect(r.stats).toEqual({ count: 2, clean: 4.5, staff: 4.5 });
   });
 
@@ -107,7 +114,7 @@ describe("publicReviews", () => {
     await store.addFeedback({ clean: 5, staff: 5, comment: "", name: "Без тексту", createdAt: new Date(NOW.getTime() - 3 * DAY) });
     await store.addFeedback({ clean: 1, staff: 1, comment: "Приховано", hidden: true, createdAt: new Date(NOW.getTime() - 2 * DAY) });
     await store.addFeedback({ clean: 4, staff: 5, comment: "Смачно", createdAt: new Date(NOW.getTime() - DAY) });
-    await store.addFeedback({ clean: 5, staff: 4, comment: "Супер", name: "Олена", phone: "380991234567", createdAt: NOW });
+    await store.addFeedback({ clean: 5, staff: 4, comment: "Супер", wish: "Лате на вівсяному", name: "Олена", phone: "380991234567", createdAt: NOW });
 
     const { items } = await publicReviews(deps);
     expect(items).toEqual([
@@ -115,6 +122,7 @@ describe("publicReviews", () => {
       { id: "f3", createdAt: new Date(NOW.getTime() - DAY).toISOString(), clean: 4, staff: 5, comment: "Смачно" },
     ]);
     expect(JSON.stringify(items)).not.toContain("380");
+    expect(JSON.stringify(items)).not.toContain("вівсяному");
   });
 
   it("caps the list at 12", async () => {

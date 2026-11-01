@@ -42,6 +42,8 @@ export interface Feedback {
   clean: number;
   staff: number;
   comment: string;
+  /** «Що б ви хотіли, щоб ми додали в меню?» — for staff only, never shown on the site. */
+  wish?: string;
   name?: string;
   phone?: string;
   hidden?: boolean;

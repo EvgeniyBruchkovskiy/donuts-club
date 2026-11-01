@@ -7,6 +7,7 @@ import { rateStep, type Feedback, type Store } from "./store.js";
 /** The staff page averages the last 30 days. */
 const STATS_WINDOW_MS = 30 * 24 * 3600_000;
 const COMMENT_MAX = 1000;
+const WISH_MAX = 500;
 const NAME_RE = /^\p{L}[\p{L}\s'’ʼ-]*$/u;
 
 /** Reviews need no Poster — only state, clock and logs. */
@@ -21,6 +22,7 @@ export interface FeedbackInput {
   clean: number;
   staff: number;
   comment: string;
+  wish?: string;
   name?: string;
   phone?: string;
 }
@@ -34,10 +36,16 @@ export function validateFeedback(raw: unknown): FeedbackInput {
   const r = (raw ?? {}) as Record<string, unknown>;
   const out: FeedbackInput = { clean: rating(r.clean), staff: rating(r.staff), comment: "" };
 
-  if (r.comment !== undefined && r.comment !== null) {
-    if (typeof r.comment !== "string") throw new UserError("invalid-argument", MSG.badComment);
-    out.comment = r.comment.trim().replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
-    if (out.comment.length > COMMENT_MAX) throw new UserError("invalid-argument", MSG.badComment);
+  const text = (v: unknown, max: number, msg: string): string => {
+    if (typeof v !== "string") throw new UserError("invalid-argument", msg);
+    const t = v.trim().replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+    if (t.length > max) throw new UserError("invalid-argument", msg);
+    return t;
+  };
+  if (r.comment !== undefined && r.comment !== null) out.comment = text(r.comment, COMMENT_MAX, MSG.badComment);
+  if (r.wish !== undefined && r.wish !== null) {
+    const wish = text(r.wish, WISH_MAX, MSG.badWish);
+    if (wish) out.wish = wish;
   }
 
   const name = typeof r.name === "string" ? r.name.trim().replace(/\s+/g, " ") : "";
@@ -114,6 +122,7 @@ export interface FeedbackView {
   clean: number;
   staff: number;
   comment: string;
+  wish?: string;
   name?: string;
   phone?: string;
   /** Only reviews with a comment can show on the site; this is the staff's switch. */
@@ -168,6 +177,7 @@ export async function staffAction(raw: unknown, ip: string, pin: string, deps: F
           clean: f.clean,
           staff: f.staff,
           comment: f.comment,
+          ...(f.wish ? { wish: f.wish } : {}),
           ...(f.name ? { name: f.name } : {}),
           ...(f.phone ? { phone: f.phone } : {}),
           ...(f.hidden ? { hidden: true } : {}),

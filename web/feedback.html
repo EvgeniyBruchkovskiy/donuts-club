@@ -36,7 +36,7 @@
   <section class="acc-card" data-state="survey">
     <span class="eyebrow">Ваша думка</span>
     <h1 class="acc-title">Як вам у DONUTS CLUB?</h1>
-    <p class="acc-sub">Два питання і коментар — хвилина часу. Ми читаємо кожен відгук.</p>
+    <p class="acc-sub">Два питання, коментар і побажання до меню — хвилина часу. Ми читаємо кожен відгук.</p>
     <form id="surveyForm" class="acc-form" novalidate>
       <fieldset class="fb-q">
         <legend class="acc-label">Чи було чисто в залі?</legend>
@@ -50,6 +50,8 @@
       </fieldset>
       <label class="acc-label" for="fbComment">Ваш коментар <span class="acc-muted">(необов'язково)</span></label>
       <textarea id="fbComment" class="acc-input fb-comment" rows="4" maxlength="1000" placeholder="Що сподобалось, а що нам варто покращити?"></textarea>
+      <label class="acc-label" for="fbWish">Що б ви хотіли, щоб ми додали або ввели в меню? <span class="acc-muted">(необов'язково)</span></label>
+      <textarea id="fbWish" class="acc-input fb-comment fb-wish" rows="3" maxlength="500" placeholder="Нова начинка, напій, десерт, веганські чи безглютенові позиції…"></textarea>
       <p id="surveyError" class="acc-error" role="alert" hidden></p>
       <button id="surveyNext" class="btn btn-primary acc-btn" type="submit" disabled>Далі</button>
     </form>

@@ -9,7 +9,7 @@ import { initStars } from "./stars";
 import { thanksCopy } from "./copy";
 
 type State = "survey" | "contacts" | "thanks";
-type Payload = { clean: number; staff: number; comment: string; name?: string; phone?: string };
+type Payload = { clean: number; staff: number; comment: string; wish?: string; name?: string; phone?: string };
 
 const submit = httpsCallable<Payload, { ok: true }>(functions, "submitFeedback");
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -65,6 +65,8 @@ const sendBtn = $<HTMLButtonElement>("sendFeedback");
 
 async function send() {
   const payload: Payload = { ...ratings, comment: $<HTMLTextAreaElement>("fbComment").value.trim() };
+  const wish = $<HTMLTextAreaElement>("fbWish").value.trim();
+  if (wish) payload.wish = wish;
   const name = $<HTMLInputElement>("fbName").value.trim();
   if (name) {
     if (name.length < 2) return setError("contactsError", "Ім'я — щонайменше 2 літери.");
