@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /staff
+
+Sitemap: https://donutsclub.kr.ua/sitemap.xml

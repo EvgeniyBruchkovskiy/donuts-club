@@ -1,6 +1,8 @@
 {
   "name": "DONUTS CLUB - Кав'ярня",
   "short_name": "DONUTS CLUB",
+  "description": "Кав'ярня та кондитерська у Кропивницькому: пончики, сінамони, кава, десерти.",
+  "lang": "uk",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
