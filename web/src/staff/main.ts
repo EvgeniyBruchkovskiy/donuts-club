@@ -6,9 +6,9 @@ import { errorMessage } from "../account/errors";
 import { prettyPhone, purchaseDate } from "../account/format";
 import { functions } from "../lib/firebaseApp";
 
-interface FeedbackView { id: string; createdAt: string; clean: number; staff: number; comment: string; name?: string; phone?: string }
+interface FeedbackView { id: string; createdAt: string; clean: number; staff: number; comment: string; name?: string; phone?: string; hidden?: boolean }
 interface FeedbackList { items: FeedbackView[]; stats: { count: number; clean: number | null; staff: number | null } }
-type Req = { pin: string; action: "login" | "feedback" };
+type Req = { pin: string; action: "login" | "feedback" } | { pin: string; action: "hide"; id: string; hidden: boolean };
 
 const call = httpsCallable<Req, { ok: true } | FeedbackList>(functions, "staffAction");
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -121,9 +121,36 @@ function renderReviews({ items, stats }: FeedbackList) {
       }
       li.append(c);
     }
+    if (f.comment) li.append(siteSwitch(f));
     list.append(li);
   }
   $("reviewsEmpty").hidden = items.length > 0;
+}
+
+/** Reviews with text show on the site (name, no phone) until a barista hides them here. */
+function siteSwitch(f: FeedbackView): HTMLElement {
+  const row = document.createElement("div");
+  row.className = "st-site" + (f.hidden ? " is-hidden" : "");
+  const label = document.createElement("span");
+  label.textContent = f.hidden ? "Приховано з сайту" : "Показується на сайті";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "st-site-btn";
+  btn.textContent = f.hidden ? "Показати на сайті" : "Сховати з сайту";
+  btn.addEventListener("click", async () => {
+    busy(btn, true);
+    setError("reviewsError", null);
+    try {
+      await call({ pin, action: "hide", id: f.id, hidden: !f.hidden });
+      await loadReviews();
+    } catch (err) {
+      if (isBadPin(err)) return logout("PIN змінився. Увійдіть знову.");
+      setError("reviewsError", err);
+      busy(btn, false);
+    }
+  });
+  row.append(label, btn);
+  return row;
 }
 
 const reloadBtn = $<HTMLButtonElement>("reviewsReload");

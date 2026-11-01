@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import { resolve } from "node:path";
 
 const PAGES = ["account", "feedback", "staff"];
@@ -17,8 +17,20 @@ const cleanUrls = (): Plugin => {
   };
 };
 
-export default defineConfig({
+/** Where /api/reviews goes in dev (prod has a Hosting rewrite to the publicReviews function). */
+function reviewsApi(env: Record<string, string>): string {
+  if (env.VITE_REVIEWS_API) return env.VITE_REVIEWS_API;
+  if (env.VITE_USE_EMULATORS === "1") return "http://127.0.0.1:5001/named-vine-322614/europe-central2/publicReviews";
+  return "https://europe-central2-named-vine-322614.cloudfunctions.net/publicReviews";
+}
+
+export default defineConfig(({ mode }) => ({
   plugins: [cleanUrls()],
+  server: {
+    proxy: {
+      "/api/reviews": { target: reviewsApi(loadEnv(mode, import.meta.dirname, "VITE_")), changeOrigin: true, rewrite: () => "" },
+    },
+  },
   build: {
     outDir: "dist",
     rollupOptions: {
@@ -28,4 +40,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
