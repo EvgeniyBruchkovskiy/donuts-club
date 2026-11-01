@@ -80,4 +80,13 @@ export class FirestoreStore implements Store {
     const q = await this.db.collection("feedback").orderBy("createdAt", "desc").limit(limit).get();
     return q.docs.map((d) => ({ ...(d.data() as Feedback), id: d.id, createdAt: (d.get("createdAt") as Timestamp).toDate() }));
   }
+
+  async setFeedbackHidden(id: string, hidden: boolean): Promise<boolean> {
+    const ref = this.db.collection("feedback").doc(id);
+    return this.db.runTransaction(async (tx) => {
+      if (!(await tx.get(ref)).exists) return false;
+      tx.update(ref, { hidden });
+      return true;
+    });
+  }
 }

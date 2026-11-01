@@ -143,6 +143,11 @@ export class MemoryStore implements Store {
   async listFeedback(limit: number) {
     return [...this.feedback].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, limit);
   }
+  async setFeedbackHidden(id: string, hidden: boolean) {
+    const f = this.feedback.find((x) => x.id === id);
+    if (f) f.hidden = hidden;
+    return Boolean(f);
+  }
 }
 
 export function makeDeps(now = new Date("2026-09-29T10:00:00Z")) {

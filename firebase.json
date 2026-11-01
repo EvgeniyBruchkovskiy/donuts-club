@@ -8,6 +8,15 @@
       "**/node_modules/**"
     ],
     "cleanUrls": true,
+    "rewrites": [
+      {
+        "source": "/api/reviews",
+        "function": {
+          "functionId": "publicReviews",
+          "region": "europe-central2"
+        }
+      }
+    ],
     "headers": [
       {
         "source": "/",

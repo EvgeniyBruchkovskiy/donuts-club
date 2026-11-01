@@ -75,6 +75,37 @@ export async function submitFeedback(raw: unknown, ip: string, deps: FeedbackDep
   return { ok: true };
 }
 
+/* ---------- site: «Що кажуть гості» ---------- */
+
+/** What the site shows: text, name as typed and both ratings — never the phone. */
+export interface PublicReview {
+  id: string;
+  createdAt: string;
+  clean: number;
+  staff: number;
+  comment: string;
+  name?: string;
+}
+
+const PUBLIC_LIMIT = 12;
+
+/** Reviews with a comment that staff have not hidden, newest first. */
+export async function publicReviews(deps: Pick<FeedbackDeps, "store">): Promise<{ items: PublicReview[] }> {
+  const list = await deps.store.listFeedback(PUBLIC_LIMIT * 5);
+  const items = list
+    .filter((f) => f.comment && !f.hidden)
+    .slice(0, PUBLIC_LIMIT)
+    .map((f) => ({
+      id: f.id,
+      createdAt: f.createdAt.toISOString(),
+      clean: f.clean,
+      staff: f.staff,
+      comment: f.comment,
+      ...(f.name ? { name: f.name } : {}),
+    }));
+  return { items };
+}
+
 /* ---------- staff page (PIN-protected) ---------- */
 
 export interface FeedbackView {
@@ -85,6 +116,8 @@ export interface FeedbackView {
   comment: string;
   name?: string;
   phone?: string;
+  /** Only reviews with a comment can show on the site; this is the staff's switch. */
+  hidden?: boolean;
 }
 
 export interface FeedbackList {
@@ -104,7 +137,7 @@ function samePin(given: string, expected: string): boolean {
 const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
 
 /**
- * One callable for the staff page: `login` | `feedback`.
+ * One callable for the staff page: `login` | `feedback` | `hide` (toggles a review on the site).
  * Wrong PINs are counted per IP; after 8 in 15 minutes even the right PIN is refused until the window passes.
  */
 export async function staffAction(raw: unknown, ip: string, pin: string, deps: FeedbackDeps): Promise<StaffResult> {
@@ -137,9 +170,16 @@ export async function staffAction(raw: unknown, ip: string, pin: string, deps: F
           comment: f.comment,
           ...(f.name ? { name: f.name } : {}),
           ...(f.phone ? { phone: f.phone } : {}),
+          ...(f.hidden ? { hidden: true } : {}),
         })),
         stats: { count: recent.length, clean: avg(recent.map((f) => f.clean)), staff: avg(recent.map((f) => f.staff)) },
       };
+    }
+    case "hide": {
+      if (typeof r.id !== "string" || !r.id || typeof r.hidden !== "boolean") throw new UserError("invalid-argument", MSG.badAction);
+      if (!(await deps.store.setFeedbackHidden(r.id, r.hidden))) throw new UserError("not-found", MSG.noReview);
+      deps.log("info", r.hidden ? "feedback hidden" : "feedback shown", { id: r.id });
+      return { ok: true };
     }
     default:
       throw new UserError("invalid-argument", MSG.badAction);

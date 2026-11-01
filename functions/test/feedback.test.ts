@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { staffAction, submitFeedback, validateFeedback } from "../src/feedback.js";
+import { publicReviews, staffAction, submitFeedback, validateFeedback } from "../src/feedback.js";
 import { makeDeps } from "./fakes.js";
 
 const NOW = new Date("2026-10-05T10:00:00Z");
@@ -79,10 +79,47 @@ describe("staffAction", () => {
     expect(r.stats).toEqual({ count: 2, clean: 4.5, staff: 4.5 });
   });
 
+  it("hides and shows a review on the site", async () => {
+    const { deps, store } = makeDeps(NOW);
+    await store.addFeedback({ clean: 1, staff: 2, comment: "Гидота", name: "Іван", createdAt: NOW });
+    expect(await staffAction({ pin: PIN, action: "hide", id: "f1", hidden: true }, IP, PIN, deps)).toEqual({ ok: true });
+    expect(store.feedback[0].hidden).toBe(true);
+    const r = await staffAction({ pin: PIN, action: "feedback" }, IP, PIN, deps);
+    if (!("items" in r)) throw new Error("expected a list");
+    expect(r.items[0].hidden).toBe(true);
+    await staffAction({ pin: PIN, action: "hide", id: "f1", hidden: false }, IP, PIN, deps);
+    expect(store.feedback[0].hidden).toBe(false);
+    await expect(staffAction({ pin: PIN, action: "hide", id: "nope", hidden: true }, IP, PIN, deps)).rejects.toMatchObject({ code: "not-found" });
+    await expect(staffAction({ pin: PIN, action: "hide", id: "f1" }, IP, PIN, deps)).rejects.toMatchObject({ code: "invalid-argument" });
+  });
+
   it("rejects unknown actions, including the retired promo ones", async () => {
     const { deps } = makeDeps(NOW);
     for (const action of ["drop", "check", "redeem"]) {
       await expect(staffAction({ pin: PIN, action }, IP, PIN, deps)).rejects.toMatchObject({ code: "invalid-argument" });
     }
+  });
+});
+
+describe("publicReviews", () => {
+  it("shows commented, unhidden reviews newest first — with the name, without the phone", async () => {
+    const { deps, store } = makeDeps(NOW);
+    await store.addFeedback({ clean: 5, staff: 5, comment: "", name: "Без тексту", createdAt: new Date(NOW.getTime() - 3 * DAY) });
+    await store.addFeedback({ clean: 1, staff: 1, comment: "Приховано", hidden: true, createdAt: new Date(NOW.getTime() - 2 * DAY) });
+    await store.addFeedback({ clean: 4, staff: 5, comment: "Смачно", createdAt: new Date(NOW.getTime() - DAY) });
+    await store.addFeedback({ clean: 5, staff: 4, comment: "Супер", name: "Олена", phone: "380991234567", createdAt: NOW });
+
+    const { items } = await publicReviews(deps);
+    expect(items).toEqual([
+      { id: "f4", createdAt: NOW.toISOString(), clean: 5, staff: 4, comment: "Супер", name: "Олена" },
+      { id: "f3", createdAt: new Date(NOW.getTime() - DAY).toISOString(), clean: 4, staff: 5, comment: "Смачно" },
+    ]);
+    expect(JSON.stringify(items)).not.toContain("380");
+  });
+
+  it("caps the list at 12", async () => {
+    const { deps, store } = makeDeps(NOW);
+    for (let i = 0; i < 20; i++) await store.addFeedback({ clean: 5, staff: 5, comment: `№${i}`, createdAt: new Date(NOW.getTime() - i * 60_000) });
+    expect((await publicReviews(deps)).items).toHaveLength(12);
   });
 });

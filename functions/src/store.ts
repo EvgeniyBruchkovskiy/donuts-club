@@ -34,13 +34,17 @@ export interface LedgerOutcome {
 
 export type LedgerStatus = "pending" | LedgerOutcome["status"];
 
-/** A guest review from /feedback. `phone` is the digits-only 380… form (not verified by SMS). */
+/**
+ * A guest review from /feedback. `phone` is the digits-only 380… form (not verified by SMS).
+ * Reviews with a comment show on the site unless staff set `hidden` from /staff.
+ */
 export interface Feedback {
   clean: number;
   staff: number;
   comment: string;
   name?: string;
   phone?: string;
+  hidden?: boolean;
   createdAt: Date;
 }
 
@@ -62,6 +66,8 @@ export interface Store {
   addFeedback(f: Feedback): Promise<void>;
   /** Newest first. */
   listFeedback(limit: number): Promise<(Feedback & { id: string })[]>;
+  /** Resolves false when no such review exists. */
+  setFeedbackHidden(id: string, hidden: boolean): Promise<boolean>;
 }
 
 /** Fixed-window limiter step (pure — unit tested). */

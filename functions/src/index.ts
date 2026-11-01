@@ -11,7 +11,7 @@ import { getMyLoyalty as getMyLoyaltyImpl, type Deps } from "./loyalty.js";
 import { normalizePhone } from "./phone.js";
 import { PosterClient, PosterError } from "./poster/client.js";
 import { runBirthdayBonuses } from "./bonus/birthday.js";
-import { ipKey, staffAction as staffActionImpl, submitFeedback as submitFeedbackImpl, type FeedbackDeps } from "./feedback.js";
+import { ipKey, publicReviews as publicReviewsImpl, staffAction as staffActionImpl, submitFeedback as submitFeedbackImpl, type FeedbackDeps } from "./feedback.js";
 import { registerMe as registerMeImpl } from "./register.js";
 import { buildPkpass, passImages, passJson, pushUpdates, wwdrPem, type AppleSigner } from "./wallet/apple.js";
 import { handleAppleRequest } from "./wallet/appleWebService.js";
@@ -213,7 +213,25 @@ export const submitFeedback = onCall({ ...callableOpts, secrets: [] }, (req) =>
   run("submitFeedback", () => submitFeedbackImpl(req.data, clientIp(req), feedbackDeps())),
 );
 
-/** Barista page /staff: check and redeem free-donut codes, read reviews. PIN-protected. */
+/**
+ * The site's «Що кажуть гості»: reviews with a comment, name but no phone. Served as /api/reviews
+ * through a Hosting rewrite, so the CDN caches it (up to 15 min) and the page needs no Firebase SDK.
+ */
+export const publicReviews = onRequest({ cors: ALLOWED_ORIGINS, memory: "256MiB", timeoutSeconds: 15 }, async (req, res) => {
+  if (req.method !== "GET") {
+    res.status(405).end();
+    return;
+  }
+  try {
+    const out = await publicReviewsImpl(feedbackDeps());
+    res.set("Cache-Control", "public, max-age=300, s-maxage=900").json(out);
+  } catch (err) {
+    logger.error("publicReviews: unexpected", { error: err instanceof Error ? err.name : "unknown" });
+    res.status(500).end();
+  }
+});
+
+/** Barista page /staff: read reviews and choose which show on the site. PIN-protected. */
 export const staffAction = onCall({ ...callableOpts, secrets: [STAFF_PIN] }, (req) =>
   run("staffAction", () => staffActionImpl(req.data, clientIp(req), STAFF_PIN.value(), feedbackDeps())),
 );

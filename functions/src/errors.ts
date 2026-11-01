@@ -1,7 +1,7 @@
 /** Errors the callable layer turns into HttpsError with a Ukrainian message for the UI. */
 export class UserError extends Error {
   constructor(
-    readonly code: "invalid-argument" | "failed-precondition" | "resource-exhausted" | "unavailable",
+    readonly code: "invalid-argument" | "failed-precondition" | "resource-exhausted" | "unavailable" | "not-found",
     message: string,
   ) {
     super(message);
@@ -20,6 +20,7 @@ export const MSG = {
   badPin: "Невірний PIN.",
   staffLocked: "Забагато невдалих спроб. Спробуйте через 15 хвилин.",
   badAction: "Невідома дія.",
+  noReview: "Відгук не знайдено — оновіть список.",
   notMember: "Спершу приєднайтеся до клубу — тоді картку можна додати в гаманець.",
   walletOff: "Додавання в гаманець ще налаштовується. Спробуйте трохи пізніше.",
 } as const;
