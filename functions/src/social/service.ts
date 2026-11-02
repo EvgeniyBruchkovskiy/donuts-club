@@ -99,6 +99,8 @@ function newPin(team: TeamMember[], ownerPin: string): { pin: string; hash: stri
   }
 }
 
+const DEVICE_RE = /^[0-9a-f]{64,200}$/;
+
 const ADMIN_ACTIONS = new Set(["connect", "disconnect", "team", "addMember", "removeMember", "resetPin"]);
 const WRITE_ACTIONS = new Set(["upload", "create", "update", "now", "remove"]);
 
@@ -254,6 +256,21 @@ export async function socialAction(raw: unknown, ip: string, pin: string, deps: 
       if (!PLATFORMS.includes(platform)) throw bad(SMSG.badPlatforms);
       await deps.social.setAccount(platform, null);
       return { ok: true, accounts: accountsView(await deps.social.getAccounts()) };
+    }
+
+    /** The phone's APNs token, so it hears about published and failed posts. */
+    case "registerDevice": {
+      const token = typeof r.token === "string" ? r.token.toLowerCase() : "";
+      if (!DEVICE_RE.test(token)) throw bad(MSG.badAction);
+      const env = r.env === "sandbox" ? "sandbox" : "production";
+      await deps.social.setDevice(token, { token, env, memberName: me.name, updatedAt: now });
+      return { ok: true };
+    }
+
+    case "unregisterDevice": {
+      const token = typeof r.token === "string" ? r.token.toLowerCase() : "";
+      if (DEVICE_RE.test(token)) await deps.social.setDevice(token, null);
+      return { ok: true };
     }
 
     case "team":

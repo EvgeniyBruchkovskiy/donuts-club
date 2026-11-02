@@ -102,6 +102,14 @@ struct SocialAPI {
         try await call("disconnect", ["platform": platform.rawValue], as: LoginResult.self).accounts
     }
 
+    func registerDevice(token: String, env: String) async throws {
+        _ = try await call("registerDevice", ["token": token, "env": env], as: OK.self)
+    }
+
+    func unregisterDevice(token: String) async throws {
+        _ = try await call("unregisterDevice", ["token": token], as: OK.self)
+    }
+
     func team() async throws -> TeamResult { try await call("team") }
 
     func addMember(name: String, role: Role) async throws -> TeamResult {

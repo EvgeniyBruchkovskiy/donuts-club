@@ -16,6 +16,7 @@
 		73086BE8719C72DBA8C2AF7F /* MediaFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12753B1D9E23A82B9DEE460 /* MediaFile.swift */; };
 		899746127266DA0CF033040C /* SocialAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAEB5C77B6DC17AEE209B9A /* SocialAPI.swift */; };
 		8FC5E9B4BDFD3339B97F0E2B /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96000ED5F0E1CF98F14BF507 /* Keychain.swift */; };
+		A9B1BC3251309D9439FF1AF6 /* Push.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42E2993DB3B8CD5F278B39E4 /* Push.swift */; };
 		AD7DA51E1E00E2FFA28F9C39 /* PostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75C71989DF5588CA0A88B6 /* PostDetailView.swift */; };
 		B1975F42D3E75A48C6EA14EC /* ComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662E7ADE9DB09597051BC914 /* ComposerView.swift */; };
 		C46F7D97FEF756B55FE3FABC /* DonutsPostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97D595DC8677D6059EE3F320 /* DonutsPostApp.swift */; };
@@ -32,11 +33,13 @@
 		3A8E8AD3A9A0EFD64EEB7DB9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		3BC8C3C289D2CA489E1E0741 /* DemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoData.swift; sourceTree = "<group>"; };
 		412F5FD417042E2F94FEB1D0 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		42E2993DB3B8CD5F278B39E4 /* Push.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Push.swift; sourceTree = "<group>"; };
 		662E7ADE9DB09597051BC914 /* ComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerView.swift; sourceTree = "<group>"; };
 		96000ED5F0E1CF98F14BF507 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		97D595DC8677D6059EE3F320 /* DonutsPostApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonutsPostApp.swift; sourceTree = "<group>"; };
 		9B9068D2CB9133107F969798 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AAAEB5C77B6DC17AEE209B9A /* SocialAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialAPI.swift; sourceTree = "<group>"; };
+		CDB75A49874C2AAB09088913 /* DonutsPost.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DonutsPost.entitlements; sourceTree = "<group>"; };
 		D12753B1D9E23A82B9DEE460 /* MediaFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFile.swift; sourceTree = "<group>"; };
 		DC75C71989DF5588CA0A88B6 /* PostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailView.swift; sourceTree = "<group>"; };
 		F60DC6CE637CE2D93B969045 /* DonutsPost.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DonutsPost.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -48,6 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				9B9068D2CB9133107F969798 /* Assets.xcassets */,
+				CDB75A49874C2AAB09088913 /* DonutsPost.entitlements */,
 				B46177793552A4964CB07232 /* API */,
 				52481159A04CEA1B2145AA0B /* App */,
 				9E5CA3FB07C9C1455726B384 /* Media */,
@@ -63,6 +67,7 @@
 				3BC8C3C289D2CA489E1E0741 /* DemoData.swift */,
 				97D595DC8677D6059EE3F320 /* DonutsPostApp.swift */,
 				96000ED5F0E1CF98F14BF507 /* Keychain.swift */,
+				42E2993DB3B8CD5F278B39E4 /* Push.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -195,6 +200,7 @@
 				EF288CDC1100841ADB869465 /* Models.swift in Sources */,
 				AD7DA51E1E00E2FFA28F9C39 /* PostDetailView.swift in Sources */,
 				EEA837FAAA00DE8F0BE2A11C /* PostListViews.swift in Sources */,
+				A9B1BC3251309D9439FF1AF6 /* Push.swift in Sources */,
 				503951740A631F4AFAAC0EBA /* RootView.swift in Sources */,
 				4A911DB2153D25270ED3C6D2 /* SettingsView.swift in Sources */,
 				899746127266DA0CF033040C /* SocialAPI.swift in Sources */,
@@ -240,7 +246,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J9LW2QV3T6;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -270,6 +276,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DonutsPost/DonutsPost.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Donuts Post";
@@ -322,7 +329,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = J9LW2QV3T6;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -359,6 +366,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DonutsPost/DonutsPost.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Donuts Post";

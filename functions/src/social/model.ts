@@ -53,6 +53,16 @@ export interface SocialPost {
   editedBy?: string;
 }
 
+/** A phone that gets a push when a post goes out or fails. */
+export interface SocialDevice {
+  /** APNs device token, hex. */
+  token: string;
+  /** Debug builds talk to the APNs sandbox, TestFlight builds to production. */
+  env: "sandbox" | "production";
+  memberName: string;
+  updatedAt: Date;
+}
+
 /** admin: everything incl. accounts and team; editor: posts; viewer: only looks. */
 export type Role = "admin" | "editor" | "viewer";
 export const ROLES: Role[] = ["admin", "editor", "viewer"];

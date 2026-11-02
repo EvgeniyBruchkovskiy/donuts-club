@@ -1,6 +1,6 @@
 import { Timestamp, type DocumentData, type Firestore } from "firebase-admin/firestore";
 import type { getStorage } from "firebase-admin/storage";
-import { PLATFORMS, type Accounts, type Platform, type PlatformResult, type SocialAccount, type SocialPost, type TeamMember } from "./model.js";
+import { PLATFORMS, type Accounts, type Platform, type PlatformResult, type SocialAccount, type SocialDevice, type SocialPost, type TeamMember } from "./model.js";
 import type { MediaStore, SocialStore } from "./publisher.js";
 
 type Bucket = ReturnType<ReturnType<typeof getStorage>["bucket"]>;
@@ -9,6 +9,7 @@ type Bucket = ReturnType<ReturnType<typeof getStorage>["bucket"]>;
 //   socialPosts/{auto}      scheduled posts; `dueAt` is set only while a tick should look at the post,
 //                           so the every-minute query reads just those
 //   socialConfig/accounts   Instagram and Threads access tokens
+//   socialDevices/{token}   phones that get pushes about published / failed posts
 //   socialConfig/team       { members: TeamMember[] } — personal PINs (as HMACs) and roles
 
 const toDate = (v: unknown) => (v instanceof Timestamp ? v.toDate() : undefined);
@@ -105,6 +106,16 @@ export class FirestoreSocialStore implements SocialStore {
       tx.set(ref, { members: encode(next) });
       return next;
     });
+  }
+
+  async listDevices(): Promise<SocialDevice[]> {
+    const q = await this.db.collection("socialDevices").get();
+    return q.docs.map((d) => ({ ...(d.data() as SocialDevice), updatedAt: toDate(d.get("updatedAt"))! }));
+  }
+
+  async setDevice(token: string, d: SocialDevice | null): Promise<void> {
+    const ref = this.db.doc(`socialDevices/${token}`);
+    await (d ? ref.set(encode(d) as DocumentData) : ref.delete());
   }
 
   async listPosts(limit: number) {

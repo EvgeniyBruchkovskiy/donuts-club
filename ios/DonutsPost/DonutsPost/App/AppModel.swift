@@ -68,6 +68,9 @@ final class AppModel {
     var loading = false
     var error: String?
     var lastLoaded: Date?
+    /// A post opened from a push.
+    var openPost: String?
+    private var deviceToken: String?
 
     /// Upload state shown over the composer while a post is being sent.
     var sending: SendProgress?
@@ -92,6 +95,9 @@ final class AppModel {
     }
 
     func logout() {
+        if let api, let token = deviceToken {
+            Task { try? await api.unregisterDevice(token: token) }
+        }
         Keychain.set("pin", nil)
         setMe(nil)
         pin = nil
@@ -200,6 +206,12 @@ final class AppModel {
     func disconnect(_ platform: Platform) async throws {
         guard let api else { return }
         accounts = try await api.disconnect(platform)
+    }
+
+    func registerDevice(_ token: String) async {
+        deviceToken = token
+        guard let api else { return }
+        try? await api.registerDevice(token: token, env: PushDelegate.apnsEnv)
     }
 
     func team() async throws -> [Member] {

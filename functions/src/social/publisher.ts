@@ -1,5 +1,6 @@
 import type { AccountApi, PublishApi } from "./meta.js";
-import { PLATFORMS, SMSG, type Accounts, type Platform, type PlatformResult, type SocialAccount, type SocialPost, type TeamMember } from "./model.js";
+import { PLATFORMS, SMSG, type Accounts, type Platform, type PlatformResult, type SocialAccount, type SocialDevice, type SocialPost, type TeamMember } from "./model.js";
+import { pushFor, type PushMessage } from "./push.js";
 
 export interface SocialStore {
   getAccounts(): Promise<Accounts>;
@@ -19,6 +20,8 @@ export interface SocialStore {
   getTeam(): Promise<TeamMember[]>;
   /** Transactional read-modify-write of the whole team; errors thrown by `fn` propagate. */
   mutateTeam(fn: (t: TeamMember[]) => TeamMember[]): Promise<TeamMember[]>;
+  listDevices(): Promise<SocialDevice[]>;
+  setDevice(token: string, d: SocialDevice | null): Promise<void>;
 }
 
 export interface MediaStore {
@@ -36,6 +39,8 @@ export interface SocialDeps {
   now(): Date;
   sleep(ms: number): Promise<void>;
   log(level: "info" | "warn" | "error", message: string, data: Record<string, unknown>): void;
+  /** Tells the team's phones that a post went out or failed; absent when APNs is not set up. */
+  push?(m: PushMessage): Promise<void>;
 }
 
 export const TIMING = {
@@ -128,6 +133,7 @@ async function processPost(id: string, claimed: SocialPost, deps: SocialDeps): P
     }
   }
   await deps.social.savePost(id, out);
+  if (deps.push) await deps.push(pushFor(id, out)).catch((e) => deps.log("warn", "social: push failed", { id, error: errText(e) }));
 }
 
 /** One move of a platform's state machine: create containers → wait for Meta → publish. */

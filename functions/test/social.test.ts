@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { AccountApi, ContainerStatus, PublishApi } from "../src/social/meta.js";
-import { validatePost, type Accounts, type Platform, type SocialAccount, type SocialPost, type TeamMember } from "../src/social/model.js";
+import { validatePost, type Accounts, type Platform, type SocialAccount, type SocialDevice, type SocialPost, type TeamMember } from "../src/social/model.js";
 import { refreshTokens, runSocialTick, TIMING, type MediaStore, type SocialDeps, type SocialStore } from "../src/social/publisher.js";
+import { pushFor, type PushMessage } from "../src/social/push.js";
 import { socialAction, type SocialActionDeps } from "../src/social/service.js";
 import { MemoryStore } from "./fakes.js";
 
@@ -16,7 +17,15 @@ class MemorySocial implements SocialStore {
   accounts: Accounts = {};
   posts = new Map<string, SocialPost>();
   team: TeamMember[] = [];
+  devices = new Map<string, SocialDevice>();
   seq = 0;
+  async listDevices() {
+    return [...this.devices.values()];
+  }
+  async setDevice(token: string, d: SocialDevice | null) {
+    if (d) this.devices.set(token, d);
+    else this.devices.delete(token);
+  }
   async getTeam() {
     return structuredClone(this.team);
   }
@@ -129,6 +138,7 @@ function setup() {
   const media = new FakeMedia();
   const meta = { instagram: new FakeMeta("instagram"), threads: new FakeMeta("threads") };
   const refreshed: string[] = [];
+  const pushes: PushMessage[] = [];
   const accountApi = (p: Platform): AccountApi => ({
     async me(token) {
       if (token.startsWith("bad")) throw new Error("Invalid OAuth access token");
@@ -150,11 +160,14 @@ function setup() {
       now += ms;
     },
     log: () => {},
+    push: async (m) => {
+      pushes.push(m);
+    },
     store: new MemoryStore(),
   };
   const tick = (checkTokens = false) => runSocialTick(deps as SocialDeps, new Date(now + 5 * MIN), checkTokens);
   const advance = (ms: number) => (now += ms);
-  return { deps, social, media, meta, tick, advance, refreshed };
+  return { deps, social, media, meta, tick, advance, refreshed, pushes };
 }
 
 function post(over: Partial<SocialPost> = {}): SocialPost {
@@ -353,6 +366,29 @@ describe("refreshTokens", () => {
     delete social.accounts.threads;
     await refreshTokens(deps);
     expect(refreshed).toEqual([]);
+  });
+});
+
+describe("pushes", () => {
+  it("tells the team when a post has gone out or failed", async () => {
+    const { social, media, tick, pushes } = setup();
+    media.files.add(`social/${DRAFT}/0.jpg`);
+    social.posts.set("a", post({ platforms: ["instagram"] }));
+    await tick();
+    expect(pushes).toEqual([{ postId: "a", title: "Фото опубліковано в Instagram", body: "Нові пончики з фісташкою 🍩" }]);
+
+    const failed = pushFor("b", post({ kind: "story", caption: "", platforms: ["instagram"], status: "failed", results: { instagram: { state: "failed", error: "Media expired" } } }));
+    expect(failed).toEqual({ postId: "b", title: "Сторіс не вийшло в Instagram", body: "Media expired" });
+  });
+
+  it("registers and forgets a phone", async () => {
+    const { deps, social } = setup();
+    const token = "ab".repeat(32);
+    await socialAction({ pin: PIN, action: "registerDevice", token: token.toUpperCase(), env: "sandbox" }, IP, PIN, deps);
+    expect([...social.devices.values()]).toMatchObject([{ token, env: "sandbox", memberName: "Власник" }]);
+    await expect(socialAction({ pin: PIN, action: "registerDevice", token: "xyz" }, IP, PIN, deps)).rejects.toMatchObject({ code: "invalid-argument" });
+    await socialAction({ pin: PIN, action: "unregisterDevice", token }, IP, PIN, deps);
+    expect(social.devices.size).toBe(0);
   });
 });
 

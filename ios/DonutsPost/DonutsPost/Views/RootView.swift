@@ -26,6 +26,13 @@ struct RootView: View {
             ComposerView()
                 .interactiveDismissDisabled(model.sending != nil)
         }
+        .sheet(item: Binding(get: { model.openPost.map(OpenPost.init) }, set: { model.openPost = $0?.id })) { p in
+            NavigationStack {
+                PostDetailView(postId: p.id)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Готово") { model.openPost = nil } } }
+            }
+            .task { await model.refresh() }
+        }
         .task { await model.refresh() }
         .onChange(of: phase) { _, p in
             if p == .active { Task { await model.refresh() } }
@@ -39,4 +46,9 @@ struct RootView: View {
             }
         }
     }
+}
+
+/// A post opened from a push notification.
+private struct OpenPost: Identifiable {
+    let id: String
 }

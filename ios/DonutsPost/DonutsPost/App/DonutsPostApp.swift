@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct DonutsPostApp: App {
+    @UIApplicationDelegateAdaptor(PushDelegate.self) private var push
     @State private var model = AppModel()
 
     var body: some Scene {
@@ -14,6 +15,11 @@ struct DonutsPostApp: App {
                 }
             }
             .environment(model)
+            .task(id: model.pin) {
+                PushDelegate.onToken = { token in Task { await model.registerDevice(token) } }
+                PushDelegate.onOpen = { id in model.openPost = id }
+                if model.pin != nil { await PushDelegate.start() }
+            }
             .tint(.accentColor)
             .environment(\.locale, Locale(identifier: "uk_UA"))
         }

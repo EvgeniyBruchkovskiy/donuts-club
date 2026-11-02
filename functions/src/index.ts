@@ -17,6 +17,7 @@ import { registerMe as registerMeImpl } from "./register.js";
 import { BucketMediaStore, FirestoreSocialStore } from "./social/firestoreSocialStore.js";
 import { accountApi, instagramApi, threadsApi } from "./social/meta.js";
 import { runSocialTick, type SocialDeps } from "./social/publisher.js";
+import { ApnsSender, type PushMessage } from "./social/push.js";
 import { socialAction as socialActionImpl } from "./social/service.js";
 import { buildPkpass, passImages, passJson, pushUpdates, wwdrPem, type AppleSigner } from "./wallet/apple.js";
 import { handleAppleRequest } from "./wallet/appleWebService.js";
@@ -34,6 +35,8 @@ const POSTER_TOKEN = defineSecret("POSTER_TOKEN");
 const STAFF_PIN = defineSecret("STAFF_PIN");
 /** PIN of the «Donuts Post» iOS app (scheduled Instagram/Threads posts) — not the baristas' PIN. */
 const SOCIAL_PIN = defineSecret("SOCIAL_PIN");
+/** APNs auth key (.p8, PEM) for Donuts Post pushes; key id and team in .env (APNS_KEY_ID, APNS_TEAM_ID). */
+const APNS_KEY = defineSecret("APNS_KEY");
 /** Apple Pass Type ID certificate and its key, PEM (docs/wallet-setup.md). */
 const APPLE_PASS_CERT = defineSecret("APPLE_PASS_CERT");
 const APPLE_PASS_KEY = defineSecret("APPLE_PASS_KEY");
@@ -254,10 +257,16 @@ export const birthdayBonuses = onSchedule(
   },
 );
 
-function socialDeps(): SocialDeps {
+function socialDeps(apnsKey = ""): SocialDeps {
   const bucket = process.env.SOCIAL_BUCKET || `${process.env.GCLOUD_PROJECT}-social`;
+  const social = new FirestoreSocialStore(getFirestore());
+  const apns =
+    apnsKey && process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID
+      ? new ApnsSender({ keyPem: apnsKey, keyId: process.env.APNS_KEY_ID, teamId: process.env.APNS_TEAM_ID, topic: "ua.kr.donutsclub.post" }, social, (level, message, data) => logger[level](message, data))
+      : undefined;
   return {
-    social: new FirestoreSocialStore(getFirestore()),
+    social,
+    ...(apns ? { push: (m: PushMessage) => apns.send(m) } : {}),
     media: new BucketMediaStore(getStorage().bucket(bucket)),
     publishApi: (p, a) => (p === "instagram" ? instagramApi(a.userId, a.token, fetch, a.host) : threadsApi(a.userId, a.token, fetch)),
     accountApi: (p) => accountApi(p, fetch),
@@ -277,9 +286,9 @@ export const socialAction = onCall({ secrets: [SOCIAL_PIN], cors: false, memory:
 
 /** Every minute: publishes due posts to Instagram and Threads; hourly also extends the Meta tokens. */
 export const socialPublisher = onSchedule(
-  { schedule: "* * * * *", timeZone: "Europe/Kyiv", memory: "256MiB", timeoutSeconds: 300, retryCount: 0, maxInstances: 1 },
+  { schedule: "* * * * *", timeZone: "Europe/Kyiv", memory: "256MiB", timeoutSeconds: 300, retryCount: 0, maxInstances: 1, secrets: [APNS_KEY] },
   async (event) => {
     const at = new Date(event.scheduleTime);
-    await runSocialTick(socialDeps(), new Date(Date.now() + 240_000), at.getUTCMinutes() === 7);
+    await runSocialTick(socialDeps(APNS_KEY.value()), new Date(Date.now() + 240_000), at.getUTCMinutes() === 7);
   },
 );
