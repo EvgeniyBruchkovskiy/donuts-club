@@ -22,22 +22,10 @@ socialPublisher (щохвилини) ──signed GET URL──▶ Instagram API
 ## 1. Firebase (Cloud Shell, один раз)
 
 ```bash
-P=named-vine-322614
-SA=510543265347-compute@developer.gserviceaccount.com   # сервісний акаунт функцій
-B=gs://$P-social
+bash scripts/social-infra.sh   # бакет, правило 90 днів, IAM для підписаних посилань
 
-gcloud services enable iamcredentials.googleapis.com --project=$P
-gcloud storage buckets create $B --project=$P --location=europe-central2 \
-  --uniform-bucket-level-access --public-access-prevention
-echo '{"rule":[{"action":{"type":"Delete"},"condition":{"age":90}}]}' > /tmp/lc.json
-gcloud storage buckets update $B --lifecycle-file=/tmp/lc.json
-gcloud storage buckets add-iam-policy-binding $B --member=serviceAccount:$SA --role=roles/storage.objectAdmin
-# підписані посилання: функція підписує їх від свого ж акаунта
-gcloud iam service-accounts add-iam-policy-binding $SA --member=serviceAccount:$SA \
-  --role=roles/iam.serviceAccountTokenCreator --project=$P
-
-firebase functions:secrets:set SOCIAL_PIN --project=$P     # PIN застосунку (не PIN баристи)
-firebase deploy --only functions:socialAction,functions:socialPublisher --project=$P
+firebase functions:secrets:set SOCIAL_PIN --project=named-vine-322614     # PIN застосунку (не PIN баристи)
+firebase deploy --only functions:socialAction,functions:socialPublisher --project=named-vine-322614
 ```
 
 Вартість: бакет у europe-central2 майже порожній (файли видаляються після публікації),
