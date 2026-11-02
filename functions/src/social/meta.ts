@@ -74,6 +74,9 @@ export function accountApi(platform: Platform, fetchFn: Fetch): AccountApi {
   return {
     async me(token) {
       if (platform === "instagram" && igHostOf(token) === "facebook") {
+        // Unified-login tokens are issued for the Instagram account itself: /me is that account.
+        const self = await call(fetchFn, "GET", `${FB}/${v}/me`, { fields: "id,username", access_token: token }).catch(() => null);
+        if (self && typeof self.username === "string" && self.username) return { userId: String(self.id), username: self.username, host: "facebook" };
         const b = await call(fetchFn, "GET", `${FB}/${v}/me/accounts`, { fields: "instagram_business_account{id,username}", access_token: token });
         const ig = ((b.data as Record<string, unknown>[] | undefined) ?? [])
           .map((p) => p.instagram_business_account as Record<string, unknown> | undefined)

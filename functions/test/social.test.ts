@@ -451,10 +451,16 @@ describe("Instagram token kinds", async () => {
     return { f, urls };
   };
 
-  it("finds the Instagram account behind a Facebook token and publishes through graph.facebook.com", async () => {
-    const { f, urls } = fake({ data: [{ id: "page1" }, { id: "page2", instagram_business_account: { id: "1784", username: "donuts_club_krop" } }] });
+  it("takes the Instagram account a Unified-login token was issued for", async () => {
+    const { f, urls } = fake({ id: "1784", username: "donuts_club_krop" });
     expect(await accountApi("instagram", f).me("EAAtoken-0123456789")).toEqual({ userId: "1784", username: "donuts_club_krop", host: "facebook" });
-    expect(urls[0]).toMatch(/^https:\/\/graph\.facebook\.com\/v24\.0\/me\/accounts\?/);
+    expect(urls).toHaveLength(1);
+  });
+
+  it("finds the Instagram account behind a Facebook token and publishes through graph.facebook.com", async () => {
+    const { f, urls } = fake({ id: "fb-user", data: [{ id: "page1" }, { id: "page2", instagram_business_account: { id: "1784", username: "donuts_club_krop" } }] });
+    expect(await accountApi("instagram", f).me("EAAtoken-0123456789")).toEqual({ userId: "1784", username: "donuts_club_krop", host: "facebook" });
+    expect(urls[1]).toMatch(/^https:\/\/graph\.facebook\.com\/v24\.0\/me\/accounts\?/);
     expect(await accountApi("instagram", f).refresh("EAAtoken-0123456789")).toEqual({ token: "EAAtoken-0123456789" });
 
     const pub = fake({ id: "c1" });
