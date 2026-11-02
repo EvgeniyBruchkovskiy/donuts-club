@@ -149,8 +149,8 @@ struct ConnectView: View {
         switch platform {
         case .instagram:
             [
-                "У Meta for Developers відкрийте застосунок Donuts Post → Use cases → «Manage messaging & content on Instagram» → API setup with Instagram login.",
-                "У розділі «Generate access tokens» натисніть Add account і увійдіть в Instagram Donuts Club.",
+                "Meta for Developers → застосунок Donuts Post → Сценарії використання → Instagram API → API setup with Unified login.",
+                "Розділ «2. Згенеруйте маркери доступу» → Додати акаунт → увійдіть в Instagram Donuts Club.",
                 "Натисніть Generate token біля акаунта, погодьтеся і скопіюйте токен.",
                 "Поверніться сюди і вставте його нижче.",
             ]

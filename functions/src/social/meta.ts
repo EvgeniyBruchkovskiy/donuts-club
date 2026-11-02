@@ -28,8 +28,17 @@ export interface PublishApi {
   permalink(mediaId: string): Promise<string | undefined>;
 }
 
+/**
+ * Instagram tokens come in two kinds: Instagram Login tokens (IGAA…, graph.instagram.com) and, for apps
+ * created since Meta's «Unified login» (late 2026), Facebook tokens (EAA…, graph.facebook.com) that reach
+ * the Instagram account through a Page or the business portfolio. Publishing calls are the same on both.
+ */
+export type IgHost = "instagram" | "facebook";
+export const igHostOf = (token: string): IgHost => (token.startsWith("EAA") ? "facebook" : "instagram");
+const FB = "https://graph.facebook.com";
+
 export interface AccountApi {
-  me(token: string): Promise<{ userId: string; username: string }>;
+  me(token: string): Promise<{ userId: string; username: string; host?: IgHost }>;
   /** Extends a long-lived token by 60 days (it must be at least a day old). */
   refresh(token: string): Promise<{ token: string; expiresInSec?: number }>;
 }
@@ -64,14 +73,24 @@ export function accountApi(platform: Platform, fetchFn: Fetch): AccountApi {
   const v = VERSIONS[platform];
   return {
     async me(token) {
+      if (platform === "instagram" && igHostOf(token) === "facebook") {
+        const b = await call(fetchFn, "GET", `${FB}/${v}/me/accounts`, { fields: "instagram_business_account{id,username}", access_token: token });
+        const ig = ((b.data as Record<string, unknown>[] | undefined) ?? [])
+          .map((p) => p.instagram_business_account as Record<string, unknown> | undefined)
+          .find((x) => x && typeof x.id === "string");
+        if (!ig) throw new MetaError("Токен не має доступу до жодного професійного акаунта Instagram");
+        return { userId: String(ig.id), username: String(ig.username ?? ""), host: "facebook" };
+      }
       if (platform === "instagram") {
         const b = await call(fetchFn, "GET", `${host}/${v}/me`, { fields: "user_id,username", access_token: token });
-        return { userId: String(b.user_id ?? b.id), username: String(b.username ?? "") };
+        return { userId: String(b.user_id ?? b.id), username: String(b.username ?? ""), host: "instagram" };
       }
       const b = await call(fetchFn, "GET", `${host}/${v}/me`, { fields: "id,username", access_token: token });
       return { userId: String(b.id), username: String(b.username ?? "") };
     },
     async refresh(token) {
+      // Facebook tokens from the dashboard (system user / page) do not expire and have no refresh call.
+      if (platform === "instagram" && igHostOf(token) === "facebook") return { token };
       const grant = platform === "instagram" ? "ig_refresh_token" : "th_refresh_token";
       const b = await call(fetchFn, "GET", `${host}/refresh_access_token`, { grant_type: grant, access_token: token });
       if (typeof b.access_token !== "string") throw new MetaError("Meta не повернула токен");
@@ -81,7 +100,7 @@ export function accountApi(platform: Platform, fetchFn: Fetch): AccountApi {
 }
 
 export function instagramApi(userId: string, token: string, fetchFn: Fetch): PublishApi {
-  const base = `${HOSTS.instagram}/${VERSIONS.instagram}`;
+  const base = `${igHostOf(token) === "facebook" ? FB : HOSTS.instagram}/${VERSIONS.instagram}`;
   const post = (path: string, p: Record<string, string>) => call(fetchFn, "POST", `${base}/${path}`, { ...p, access_token: token });
   const media = (p: Record<string, string>) => post(`${userId}/media`, p).then(idOf);
   return {

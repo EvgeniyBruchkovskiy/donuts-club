@@ -439,3 +439,37 @@ describe("socialAction", () => {
     expect(social.accounts.threads).toBeUndefined();
   });
 });
+
+describe("Instagram token kinds", async () => {
+  const { accountApi, instagramApi } = await import("../src/social/meta.js");
+  const fake = (body: unknown) => {
+    const urls: string[] = [];
+    const f = async (url: string) => {
+      urls.push(url);
+      return { ok: true, status: 200, json: async () => body };
+    };
+    return { f, urls };
+  };
+
+  it("finds the Instagram account behind a Facebook token and publishes through graph.facebook.com", async () => {
+    const { f, urls } = fake({ data: [{ id: "page1" }, { id: "page2", instagram_business_account: { id: "1784", username: "donuts_club_krop" } }] });
+    expect(await accountApi("instagram", f).me("EAAtoken-0123456789")).toEqual({ userId: "1784", username: "donuts_club_krop", host: "facebook" });
+    expect(urls[0]).toMatch(/^https:\/\/graph\.facebook\.com\/v24\.0\/me\/accounts\?/);
+    expect(await accountApi("instagram", f).refresh("EAAtoken-0123456789")).toEqual({ token: "EAAtoken-0123456789" });
+
+    const pub = fake({ id: "c1" });
+    await instagramApi("1784", "EAAtoken-0123456789", pub.f).single("image", { path: "p", kind: "image", url: "https://x/y.jpg" }, "Hi");
+    expect(pub.urls[0]).toBe("https://graph.facebook.com/v24.0/1784/media");
+  });
+
+  it("keeps Instagram Login tokens on graph.instagram.com", async () => {
+    const { f, urls } = fake({ user_id: "1784", username: "donuts_club_krop" });
+    expect(await accountApi("instagram", f).me("IGAAtoken-0123456789")).toMatchObject({ userId: "1784", host: "instagram" });
+    expect(urls[0]).toMatch(/^https:\/\/graph\.instagram\.com\/v24\.0\/me\?/);
+  });
+
+  it("explains a Facebook token without an Instagram account", async () => {
+    const { f } = fake({ data: [{ id: "page1" }] });
+    await expect(accountApi("instagram", f).me("EAAtoken-0123456789")).rejects.toThrow("професійного акаунта Instagram");
+  });
+});
