@@ -36,9 +36,13 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
 
     /// Development-signed builds (Xcode, devicectl) talk to the APNs sandbox; TestFlight builds to production.
     static var apnsEnv: String {
+        #if targetEnvironment(simulator)
+        return "sandbox"
+        #else
         guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
               let data = try? Data(contentsOf: url),
               let text = String(data: data, encoding: .isoLatin1) else { return "production" }
         return text.range(of: #"<key>aps-environment</key>\s*<string>development</string>"#, options: .regularExpression) != nil ? "sandbox" : "production"
+        #endif
     }
 }
