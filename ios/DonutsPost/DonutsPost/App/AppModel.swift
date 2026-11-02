@@ -63,6 +63,7 @@ struct Draft {
 final class AppModel {
     var pin: String? = Keychain.get("pin")
     var accounts = Accounts()
+    var me: Me? = Keychain.get("me").flatMap { try? JSONDecoder().decode(Me.self, from: Data($0.utf8)) }
     var posts: [Post] = []
     var loading = false
     var error: String?
@@ -82,15 +83,17 @@ final class AppModel {
     var published: [Post] { posts.filter { $0.status == .published }.sorted { ($0.publishedAt ?? $0.scheduledAt) > ($1.publishedAt ?? $1.scheduledAt) } }
 
     func login(_ pin: String) async throws {
-        let accounts = try await SocialAPI(pin: pin).login()
+        let r = try await SocialAPI(pin: pin).login()
         Keychain.set("pin", pin)
         self.pin = pin
-        self.accounts = accounts
+        self.accounts = r.accounts
+        setMe(r.me)
         await refresh()
     }
 
     func logout() {
         Keychain.set("pin", nil)
+        setMe(nil)
         pin = nil
         posts = []
         accounts = Accounts()
@@ -100,6 +103,7 @@ final class AppModel {
         #if DEBUG
         if DemoData.isOn {
             pin = "demo"
+            me = Me(name: "Власник", role: .admin)
             accounts = DemoData.accounts
             posts = DemoData.posts
         }
@@ -117,6 +121,7 @@ final class AppModel {
             let r = try await api.posts()
             posts = r.items
             accounts = r.accounts
+            setMe(r.me)
             lastLoaded = .now
             error = nil
         } catch let e as APIError where e.isBadPin {
@@ -195,6 +200,35 @@ final class AppModel {
     func disconnect(_ platform: Platform) async throws {
         guard let api else { return }
         accounts = try await api.disconnect(platform)
+    }
+
+    func team() async throws -> [Member] {
+        #if DEBUG
+        if DemoData.isOn { return DemoData.team }
+        #endif
+        guard let api else { return [] }
+        return try await api.team().members
+    }
+
+    func addMember(name: String, role: Role) async throws -> SocialAPI.TeamResult {
+        guard let api else { throw APIError(message: "Увійдіть знову.", status: nil) }
+        return try await api.addMember(name: name, role: role)
+    }
+
+    func resetPin(_ m: Member) async throws -> SocialAPI.TeamResult {
+        guard let api else { throw APIError(message: "Увійдіть знову.", status: nil) }
+        return try await api.resetPin(id: m.id)
+    }
+
+    func removeMember(_ m: Member) async throws -> [Member] {
+        guard let api else { return [] }
+        return try await api.removeMember(id: m.id).members
+    }
+
+    /// Kept beside the PIN so the right screens show before the first refresh.
+    private func setMe(_ m: Me?) {
+        me = m
+        Keychain.set("me", m.flatMap { try? JSONEncoder().encode($0) }.flatMap { String(data: $0, encoding: .utf8) })
     }
 
     private func replace(_ p: Post) {

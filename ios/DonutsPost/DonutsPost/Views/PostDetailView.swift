@@ -24,6 +24,12 @@ struct PostDetailView: View {
                             Text(post.scheduledAt, format: .dateTime.weekday(.wide).day().month().hour().minute())
                                 .font(.rounded(.headline))
                             Text(statusText(post)).font(.footnote).foregroundStyle(.secondary)
+                            if let by = post.createdBy {
+                                Label("Заплановано: \(by)", systemImage: "person").font(.caption).foregroundStyle(.secondary)
+                            }
+                            if let by = post.editedBy {
+                                Label("Востаннє змінено: \(by)", systemImage: "pencil").font(.caption).foregroundStyle(.secondary)
+                            }
                         }
                     }
                     .padding(.vertical, 4)
@@ -50,7 +56,7 @@ struct PostDetailView: View {
                     Section { Text(error).foregroundStyle(.red).font(.footnote) }
                 }
 
-                if post.isEditable {
+                if post.isEditable, canEdit {
                     Section {
                         Button {
                             run { try await model.publishNow(post) }
@@ -60,7 +66,7 @@ struct PostDetailView: View {
                         Button { editing = true } label: { Label("Змінити текст і час", systemImage: "pencil") }
                     }
                 }
-                if post.status != .publishing {
+                if post.status != .publishing, canEdit {
                     Section {
                         Button(role: .destructive) { confirmDelete = true } label: {
                             Label(post.status == .published ? "Прибрати з історії" : "Видалити", systemImage: "trash")
@@ -88,6 +94,8 @@ struct PostDetailView: View {
             ContentUnavailableView("Публікацію видалено", systemImage: "trash")
         }
     }
+
+    private var canEdit: Bool { model.me?.canEdit != false }
 
     private func statusText(_ p: Post) -> String {
         switch p.status {

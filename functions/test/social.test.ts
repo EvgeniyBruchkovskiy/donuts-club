@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AccountApi, ContainerStatus, PublishApi } from "../src/social/meta.js";
-import { validatePost, type Accounts, type Platform, type SocialAccount, type SocialPost } from "../src/social/model.js";
+import { validatePost, type Accounts, type Platform, type SocialAccount, type SocialPost, type TeamMember } from "../src/social/model.js";
 import { refreshTokens, runSocialTick, TIMING, type MediaStore, type SocialDeps, type SocialStore } from "../src/social/publisher.js";
 import { socialAction, type SocialActionDeps } from "../src/social/service.js";
 import { MemoryStore } from "./fakes.js";
@@ -15,7 +15,15 @@ const THUMB = "/9j/4AAQSkZJRg==";
 class MemorySocial implements SocialStore {
   accounts: Accounts = {};
   posts = new Map<string, SocialPost>();
+  team: TeamMember[] = [];
   seq = 0;
+  async getTeam() {
+    return structuredClone(this.team);
+  }
+  async mutateTeam(fn: (t: TeamMember[]) => TeamMember[]) {
+    this.team = structuredClone(fn(structuredClone(this.team)));
+    return structuredClone(this.team);
+  }
   async getAccounts() {
     return structuredClone(this.accounts);
   }
@@ -367,8 +375,39 @@ describe("socialAction", () => {
   it("logs in and shows connected accounts without tokens", async () => {
     const { deps } = setup();
     const r = await socialAction({ pin: PIN, action: "login" }, IP, PIN, deps);
-    expect(r).toEqual({ ok: true, accounts: { instagram: { username: "donutsclub" }, threads: { username: "donutsclub" } } });
+    expect(r).toEqual({ ok: true, me: { name: "Власник", role: "admin" }, accounts: { instagram: { username: "donutsclub" }, threads: { username: "donutsclub" } } });
     expect(JSON.stringify(r)).not.toContain("tok-");
+  });
+
+  it("gives team members personal PINs, roles and their name on posts", async () => {
+    const { deps, social, media } = setup();
+    media.files.add(`social/${DRAFT}/0.jpg`);
+    const add = (name: string, role: string) => socialAction({ pin: PIN, action: "addMember", name, role }, IP, PIN, deps) as Promise<{ pin: string; members: { id: string; name: string; role: string }[] }>;
+    const ed = await add(" Оля  Смм ", "editor");
+    expect(ed.pin).toMatch(/^\d{6}$/);
+    expect(ed.members).toMatchObject([{ name: "Оля Смм", role: "editor" }]);
+    expect(JSON.stringify(social.team)).not.toContain(ed.pin);
+    await expect(add("оля смм", "viewer")).rejects.toMatchObject({ code: "invalid-argument" });
+    await expect(add("Хтось", "admin")).rejects.toMatchObject({ code: "invalid-argument" });
+    const vw = await add("Перевірка", "viewer");
+
+    expect(await socialAction({ pin: ed.pin, action: "login" }, IP, PIN, deps)).toMatchObject({ me: { name: "Оля Смм", role: "editor" } });
+    const { id } = (await socialAction({ ...create(), pin: ed.pin }, IP, PIN, deps)) as { id: string };
+    await socialAction({ pin: PIN, action: "update", id, caption: "Інший текст" }, IP, PIN, deps);
+    const list = (await socialAction({ pin: vw.pin, action: "posts" }, IP, PIN, deps)) as { items: { createdBy?: string; editedBy?: string }[] };
+    expect(list.items[0]).toMatchObject({ createdBy: "Оля Смм", editedBy: "Власник" });
+
+    await expect(socialAction({ pin: vw.pin, action: "remove", id }, IP, PIN, deps)).rejects.toMatchObject({ code: "permission-denied" });
+    await expect(socialAction({ pin: ed.pin, action: "disconnect", platform: "instagram" }, IP, PIN, deps)).rejects.toMatchObject({ code: "permission-denied" });
+    await expect(socialAction({ pin: ed.pin, action: "team" }, IP, PIN, deps)).rejects.toMatchObject({ code: "permission-denied" });
+
+    const edId = ed.members[0].id;
+    const reset = (await socialAction({ pin: PIN, action: "resetPin", id: edId }, IP, PIN, deps)) as { pin: string };
+    await expect(socialAction({ pin: ed.pin, action: "login" }, IP, PIN, deps)).rejects.toMatchObject({ code: "failed-precondition" });
+    await socialAction({ pin: reset.pin, action: "login" }, IP, PIN, deps);
+    await socialAction({ pin: PIN, action: "removeMember", id: edId }, IP, PIN, deps);
+    await expect(socialAction({ pin: reset.pin, action: "login" }, IP, PIN, deps)).rejects.toMatchObject({ code: "failed-precondition" });
+    expect(((await socialAction({ pin: PIN, action: "team" }, IP, PIN, deps)) as { members: unknown[] }).members).toHaveLength(1);
   });
 
   it("hands out upload links in a fresh draft", async () => {

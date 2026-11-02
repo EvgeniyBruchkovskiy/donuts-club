@@ -7,14 +7,32 @@ struct SettingsView: View {
 
     var body: some View {
         List {
+            if let me = model.me {
+                Section {
+                    LabeledContent(me.name, value: me.role.title)
+                } header: {
+                    Text("Ви увійшли як")
+                } footer: {
+                    Text(me.role.hint)
+                }
+            }
+
             Section {
                 ForEach(Platform.allCases) { p in
-                    AccountRow(platform: p, account: model.accounts[p]) { connecting = p }
+                    AccountRow(platform: p, account: model.accounts[p], canManage: model.me?.isAdmin == true) { connecting = p }
                 }
             } header: {
                 Text("Акаунти")
             } footer: {
-                Text("Токени зберігаються лише на сервері Donuts Club і продовжуються автоматично кожні 5 днів.")
+                Text(model.me?.isAdmin == true ? "Токени зберігаються лише на сервері Donuts Club." : "Підключати акаунти може лише власник.")
+            }
+
+            if model.me?.isAdmin == true {
+                Section {
+                    NavigationLink { TeamView() } label: { Label("Команда і PIN-коди", systemImage: "person.2") }
+                } footer: {
+                    Text("У кожного свій PIN — у публікаціях видно, хто їх запланував і змінив.")
+                }
             }
 
             Section("Як це працює") {
@@ -50,6 +68,7 @@ private struct AccountRow: View {
     @Environment(AppModel.self) private var model
     let platform: Platform
     let account: Account?
+    let canManage: Bool
     let connect: () -> Void
     @State private var confirm = false
 
@@ -73,7 +92,9 @@ private struct AccountRow: View {
                 }
             }
             Spacer()
-            if account == nil {
+            if !canManage {
+                EmptyView()
+            } else if account == nil {
                 Button("Підключити", action: connect).buttonStyle(.borderedProminent).controlSize(.small)
             } else {
                 Menu {

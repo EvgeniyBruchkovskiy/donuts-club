@@ -62,14 +62,15 @@ struct SocialAPI {
 
     // MARK: - Actions
 
-    struct LoginResult: Decodable { let accounts: Accounts }
-    struct PostsResult: Decodable { let items: [Post]; let accounts: Accounts }
+    struct LoginResult: Decodable { let accounts: Accounts; let me: Me? }
+    struct PostsResult: Decodable { let items: [Post]; let me: Me; let accounts: Accounts }
+    struct TeamResult: Decodable { let members: [Member]; let pin: String? }
     struct UploadFile: Decodable { let path: String; let contentType: String; let url: URL }
     struct UploadResult: Decodable { let draftId: String; let files: [UploadFile] }
     struct CreateResult: Decodable { let id: String }
     struct OK: Decodable {}
 
-    func login() async throws -> Accounts { try await call("login", as: LoginResult.self).accounts }
+    func login() async throws -> LoginResult { try await call("login") }
 
     func posts() async throws -> PostsResult { try await call("posts") }
 
@@ -100,6 +101,16 @@ struct SocialAPI {
     func disconnect(_ platform: Platform) async throws -> Accounts {
         try await call("disconnect", ["platform": platform.rawValue], as: LoginResult.self).accounts
     }
+
+    func team() async throws -> TeamResult { try await call("team") }
+
+    func addMember(name: String, role: Role) async throws -> TeamResult {
+        try await call("addMember", ["name": name, "role": role.rawValue])
+    }
+
+    func resetPin(id: String) async throws -> TeamResult { try await call("resetPin", ["id": id]) }
+
+    func removeMember(id: String) async throws -> TeamResult { try await call("removeMember", ["id": id]) }
 
     /// PUT straight to the bucket through the signed link; reports bytes sent.
     static func put(file: URL, to url: URL, contentType: String, progress: @escaping @Sendable (Int64) -> Void) async throws {

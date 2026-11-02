@@ -1,6 +1,6 @@
 import { Timestamp, type DocumentData, type Firestore } from "firebase-admin/firestore";
 import type { getStorage } from "firebase-admin/storage";
-import { PLATFORMS, type Accounts, type Platform, type PlatformResult, type SocialAccount, type SocialPost } from "./model.js";
+import { PLATFORMS, type Accounts, type Platform, type PlatformResult, type SocialAccount, type SocialPost, type TeamMember } from "./model.js";
 import type { MediaStore, SocialStore } from "./publisher.js";
 
 type Bucket = ReturnType<ReturnType<typeof getStorage>["bucket"]>;
@@ -9,6 +9,7 @@ type Bucket = ReturnType<ReturnType<typeof getStorage>["bucket"]>;
 //   socialPosts/{auto}      scheduled posts; `dueAt` is set only while a tick should look at the post,
 //                           so the every-minute query reads just those
 //   socialConfig/accounts   Instagram and Threads access tokens
+//   socialConfig/team       { members: TeamMember[] } — personal PINs (as HMACs) and roles
 
 const toDate = (v: unknown) => (v instanceof Timestamp ? v.toDate() : undefined);
 
@@ -55,6 +56,10 @@ function decodePost(d: DocumentData): SocialPost {
   };
 }
 
+function decodeTeam(d: DocumentData | undefined): TeamMember[] {
+  return ((d?.members as DocumentData[] | undefined) ?? []).map((m) => ({ ...(m as TeamMember), createdAt: toDate(m.createdAt)! }));
+}
+
 function encodePost(p: SocialPost): DocumentData {
   return encode({ ...p, dueAt: dueAt(p) }) as DocumentData;
 }
@@ -86,6 +91,19 @@ export class FirestoreSocialStore implements SocialStore {
       if (a) data[p] = encode(a);
       else delete data[p];
       tx.set(ref, data);
+    });
+  }
+
+  async getTeam(): Promise<TeamMember[]> {
+    return decodeTeam((await this.db.doc("socialConfig/team").get()).data());
+  }
+
+  async mutateTeam(fn: (t: TeamMember[]) => TeamMember[]): Promise<TeamMember[]> {
+    const ref = this.db.doc("socialConfig/team");
+    return this.db.runTransaction(async (tx) => {
+      const next = fn(decodeTeam((await tx.get(ref)).data()));
+      tx.set(ref, { members: encode(next) });
+      return next;
     });
   }
 

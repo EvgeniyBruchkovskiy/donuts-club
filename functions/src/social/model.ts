@@ -48,6 +48,22 @@ export interface SocialPost {
   publishedAt?: Date;
   /** Originals are deleted once every platform has published; the thumbnail stays. */
   mediaDeleted?: boolean;
+  /** Team member names: who scheduled the post and who last changed it. */
+  createdBy?: string;
+  editedBy?: string;
+}
+
+/** admin: everything incl. accounts and team; editor: posts; viewer: only looks. */
+export type Role = "admin" | "editor" | "viewer";
+export const ROLES: Role[] = ["admin", "editor", "viewer"];
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: Role;
+  /** HMAC of the member's PIN keyed by the owner PIN (SOCIAL_PIN). */
+  pinHash: string;
+  createdAt: Date;
 }
 
 export interface SocialAccount {
@@ -97,6 +113,12 @@ export const SMSG = {
   badToken: "Meta не прийняла токен. Згенеруйте новий і вставте ще раз.",
   needAccountId: "Для цього токена вкажіть ID акаунта Instagram (число під назвою акаунта в Meta for Developers).",
   badUpload: "Можна завантажити до 10 файлів: фото JPEG або відео MP4.",
+  adminOnly: "Це може лише власник.",
+  viewerOnly: "У вас доступ лише на перегляд.",
+  badMemberName: "Вкажіть ім'я (до 40 символів), яке ще не зайняте.",
+  badRole: "Оберіть роль: редактор або перегляд.",
+  noMember: "Учасника не знайдено — оновіть список.",
+  teamFull: "У команді вже 30 людей.",
 } as const;
 
 const KINDS: PostKind[] = ["image", "carousel", "video", "story", "text"];

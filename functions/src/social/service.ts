@@ -1,8 +1,8 @@
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes, randomInt } from "node:crypto";
 import { MSG, UserError } from "../errors.js";
-import { pinGate, type FeedbackDeps } from "../feedback.js";
+import { pinGate, samePin, type FeedbackDeps } from "../feedback.js";
 import { MetaError } from "./meta.js";
-import { checkTexts, parsePlatforms, parseTime, PLATFORMS, SMSG, validatePost, type Accounts, type Platform, type PlatformResult, type SocialPost } from "./model.js";
+import { checkTexts, parsePlatforms, parseTime, PLATFORMS, SMSG, validatePost, type Accounts, type Platform, type PlatformResult, type Role, type SocialPost, type TeamMember } from "./model.js";
 import type { SocialDeps } from "./publisher.js";
 
 export type SocialActionDeps = SocialDeps & Pick<FeedbackDeps, "store">;
@@ -21,6 +21,8 @@ export interface PostView {
   results: Partial<Record<Platform, { state: PlatformResult["state"]; permalink?: string; error?: string }>>;
   createdAt: string;
   publishedAt?: string;
+  createdBy?: string;
+  editedBy?: string;
 }
 
 export interface AccountView {
@@ -52,6 +54,8 @@ function view(id: string, p: SocialPost): PostView {
     results,
     createdAt: p.createdAt.toISOString(),
     ...(p.publishedAt ? { publishedAt: p.publishedAt.toISOString() } : {}),
+    ...(p.createdBy ? { createdBy: p.createdBy } : {}),
+    ...(p.editedBy ? { editedBy: p.editedBy } : {}),
   };
 }
 
@@ -63,6 +67,40 @@ function accountsView(a: Accounts): Partial<Record<Platform, AccountView>> {
   }
   return out;
 }
+
+/** Who is calling: the owner (SOCIAL_PIN) or a team member with a personal PIN. */
+export interface Who {
+  id: string;
+  name: string;
+  role: Role;
+}
+
+const OWNER: Who = { id: "owner", name: "Власник", role: "admin" };
+const TEAM_MAX = 30;
+
+export const pinHash = (pin: string, ownerPin: string) => createHmac("sha256", ownerPin).update(pin).digest("hex");
+
+async function resolve(given: string, ownerPin: string, deps: SocialActionDeps): Promise<Who | null> {
+  if (!ownerPin) return null;
+  if (samePin(given, ownerPin)) return OWNER;
+  const h = pinHash(given, ownerPin);
+  const m = (await deps.social.getTeam()).find((x) => x.pinHash === h);
+  return m ? { id: m.id, name: m.name, role: m.role } : null;
+}
+
+const teamView = (t: TeamMember[]) => t.map((m) => ({ id: m.id, name: m.name, role: m.role, createdAt: m.createdAt.toISOString() }));
+
+/** A fresh 6-digit PIN that is neither the owner's nor anyone else's. */
+function newPin(team: TeamMember[], ownerPin: string): { pin: string; hash: string } {
+  for (;;) {
+    const pin = String(randomInt(100_000, 1_000_000));
+    const hash = pinHash(pin, ownerPin);
+    if (pin !== ownerPin && !team.some((m) => m.pinHash === hash)) return { pin, hash };
+  }
+}
+
+const ADMIN_ACTIONS = new Set(["connect", "disconnect", "team", "addMember", "removeMember", "resetPin"]);
+const WRITE_ACTIONS = new Set(["upload", "create", "update", "now", "remove"]);
 
 const bad = (msg: string) => new UserError("invalid-argument", msg);
 const str = (v: unknown) => (typeof v === "string" && v ? v : null);
@@ -83,21 +121,25 @@ function resetFailed(p: SocialPost): SocialPost["results"] {
 }
 
 /**
- * The «Donuts Post» app's single callable, PIN-protected like /staff:
- * login | posts | upload | create | update | remove | now | connect | disconnect.
+ * The «Donuts Post» app's single callable. Everyone signs in with a personal PIN; the owner's is SOCIAL_PIN.
+ * login | posts (everyone) · upload | create | update | remove | now (editors) ·
+ * connect | disconnect | team | addMember | removeMember | resetPin (owner and admins).
  */
 export async function socialAction(raw: unknown, ip: string, pin: string, deps: SocialActionDeps): Promise<unknown> {
   const r = (raw ?? {}) as Record<string, unknown>;
-  await pinGate("socialFail", r.pin, pin, ip, deps);
+  const me = await pinGate("socialFail", r.pin, (g) => resolve(g, pin, deps), ip, deps);
+  const action = String(r.action);
+  if (ADMIN_ACTIONS.has(action) && me.role !== "admin") throw new UserError("permission-denied", SMSG.adminOnly);
+  if (WRITE_ACTIONS.has(action) && me.role === "viewer") throw new UserError("permission-denied", SMSG.viewerOnly);
   const now = deps.now();
 
-  switch (r.action) {
+  switch (action) {
     case "login":
-      return { ok: true, accounts: accountsView(await deps.social.getAccounts()) };
+      return { ok: true, me: { name: me.name, role: me.role }, accounts: accountsView(await deps.social.getAccounts()) };
 
     case "posts": {
       const list = await deps.social.listPosts(LIST_LIMIT);
-      return { items: list.map((p) => view(p.id, p)), accounts: accountsView(await deps.social.getAccounts()) };
+      return { items: list.map((p) => view(p.id, p)), me: { name: me.name, role: me.role }, accounts: accountsView(await deps.social.getAccounts()) };
     }
 
     /** Signed PUT links for the app to upload media straight to the bucket. */
@@ -122,9 +164,9 @@ export async function socialAction(raw: unknown, ip: string, pin: string, deps: 
       const accounts = await deps.social.getAccounts();
       for (const p of input.platforms) if (!accounts[p]) throw new UserError("failed-precondition", SMSG.notConnected(p));
       for (const m of input.media) if (!(await deps.media.exists(m.path))) throw bad(SMSG.badMedia);
-      const post: SocialPost = { ...input, status: "scheduled", results: {}, createdAt: now, updatedAt: now };
+      const post: SocialPost = { ...input, status: "scheduled", results: {}, createdAt: now, updatedAt: now, createdBy: me.name };
       const id = await deps.social.addPost(post);
-      deps.log("info", "social: scheduled", { id, kind: input.kind, platforms: input.platforms, at: input.scheduledAt.toISOString() });
+      deps.log("info", "social: scheduled", { id, by: me.name, kind: input.kind, platforms: input.platforms, at: input.scheduledAt.toISOString() });
       return { id };
     }
 
@@ -135,7 +177,7 @@ export async function socialAction(raw: unknown, ip: string, pin: string, deps: 
       const accounts = await deps.social.getAccounts();
       const saved = await deps.social.mutatePost(id, (cur) => {
         const p = editable(cur);
-        const next: SocialPost = { ...p, updatedAt: now };
+        const next: SocialPost = { ...p, updatedAt: now, editedBy: me.name };
         if (r.caption !== undefined && p.kind !== "story") next.caption = typeof r.caption === "string" ? r.caption.replace(/\r\n/g, "\n").trim() : p.caption;
         if (r.threadsText !== undefined) {
           const t = typeof r.threadsText === "string" ? r.threadsText.replace(/\r\n/g, "\n").trim() : "";
@@ -168,7 +210,7 @@ export async function socialAction(raw: unknown, ip: string, pin: string, deps: 
       if (!id) throw new UserError("not-found", SMSG.noPost);
       const saved = await deps.social.mutatePost(id, (cur) => {
         const p = editable(cur);
-        return { ...p, scheduledAt: now, status: "scheduled", results: resetFailed(p), updatedAt: now };
+        return { ...p, scheduledAt: now, status: "scheduled", results: resetFailed(p), updatedAt: now, editedBy: me.name };
       });
       return view(id, saved!);
     }
@@ -183,6 +225,7 @@ export async function socialAction(raw: unknown, ip: string, pin: string, deps: 
         media = cur.mediaDeleted ? [] : cur.media.map((m) => m.path);
         return "delete";
       });
+      deps.log("info", "social: removed", { id, by: me.name });
       if (media.length) await deps.media.remove(media).catch((e) => deps.log("warn", "social: media cleanup failed", { id, error: String(e) }));
       return { ok: true };
     }
@@ -211,6 +254,52 @@ export async function socialAction(raw: unknown, ip: string, pin: string, deps: 
       if (!PLATFORMS.includes(platform)) throw bad(SMSG.badPlatforms);
       await deps.social.setAccount(platform, null);
       return { ok: true, accounts: accountsView(await deps.social.getAccounts()) };
+    }
+
+    case "team":
+      return { members: teamView(await deps.social.getTeam()) };
+
+    /** Creates a member with a fresh PIN; the PIN is shown once and only its HMAC is stored. */
+    case "addMember": {
+      const name = typeof r.name === "string" ? r.name.trim().replace(/\s+/g, " ") : "";
+      const role = r.role as Role;
+      // Accounts and the team stay with the owner.
+      if (role !== "editor" && role !== "viewer") throw bad(SMSG.badRole);
+      let pinOut = "";
+      const team = await deps.social.mutateTeam((t) => {
+        const taken = [OWNER.name, ...t.map((m) => m.name)].some((n) => n.toLowerCase() === name.toLowerCase());
+        if (!name || name.length > 40 || taken) throw bad(SMSG.badMemberName);
+        if (t.length >= TEAM_MAX) throw new UserError("failed-precondition", SMSG.teamFull);
+        const { pin: fresh, hash } = newPin(t, pin);
+        pinOut = fresh;
+        return [...t, { id: randomBytes(6).toString("hex"), name, role, pinHash: hash, createdAt: now }];
+      });
+      deps.log("info", "social: member added", { name, role, by: me.name });
+      return { members: teamView(team), pin: pinOut };
+    }
+
+    case "resetPin": {
+      const id = str(r.id);
+      let pinOut = "";
+      const team = await deps.social.mutateTeam((t) => {
+        const m = t.find((x) => x.id === id);
+        if (!m) throw new UserError("not-found", SMSG.noMember);
+        const { pin: fresh, hash } = newPin(t, pin);
+        pinOut = fresh;
+        return t.map((x) => (x.id === id ? { ...x, pinHash: hash } : x));
+      });
+      deps.log("info", "social: member pin reset", { id, by: me.name });
+      return { members: teamView(team), pin: pinOut };
+    }
+
+    case "removeMember": {
+      const id = str(r.id);
+      const team = await deps.social.mutateTeam((t) => {
+        if (!t.some((x) => x.id === id)) throw new UserError("not-found", SMSG.noMember);
+        return t.filter((x) => x.id !== id);
+      });
+      deps.log("info", "social: member removed", { id, by: me.name });
+      return { members: teamView(team) };
     }
 
     default:

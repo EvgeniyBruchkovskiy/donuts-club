@@ -9,7 +9,7 @@ struct QueueView: View {
 
     var body: some View {
         List {
-            if model.accounts.instagram == nil && model.accounts.threads == nil {
+            if model.accounts.instagram == nil && model.accounts.threads == nil, model.me?.isAdmin == true {
                 Section {
                     NavigationLink(destination: SettingsView()) {
                         Label("Підключіть Instagram і Threads, щоб публікувати", systemImage: "link.badge.plus")
@@ -37,18 +37,22 @@ struct QueueView: View {
                 ContentUnavailableView {
                     Label("Нічого не заплановано", systemImage: "calendar.badge.plus")
                 } description: {
-                    Text("Створіть пост, Reels або сторіс — він вийде сам у вказаний час.")
+                    Text(model.me?.canEdit == false ? "Тут з'являться публікації, які заплановує команда." : "Створіть пост, Reels або сторіс — він вийде сам у вказаний час.")
                 } actions: {
-                    Button("Новий пост", action: compose).buttonStyle(.borderedProminent)
+                    if model.me?.canEdit != false {
+                        Button("Новий пост", action: compose).buttonStyle(.borderedProminent)
+                    }
                 }
             }
         }
         .navigationTitle("Заплановані")
         .navigationDestination(for: Post.self) { PostDetailView(postId: $0.id) }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: compose) { Image(systemName: "plus.circle.fill").font(.title2) }
-                    .accessibilityLabel("Новий пост")
+            if model.me?.canEdit != false {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: compose) { Image(systemName: "plus.circle.fill").font(.title2) }
+                        .accessibilityLabel("Новий пост")
+                }
             }
         }
         .refreshable { await model.refresh() }
@@ -115,7 +119,12 @@ struct PostRow: View {
                     .font(.subheadline)
                     .foregroundStyle(preview.isEmpty ? .secondary : .primary)
                     .lineLimit(2)
-                PlatformBadges(post: post)
+                HStack(spacing: 8) {
+                    PlatformBadges(post: post)
+                    if let by = post.createdBy {
+                        Text("\(Image(systemName: "person.fill")) \(by)").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                }
             }
         }
         .padding(.vertical, 2)

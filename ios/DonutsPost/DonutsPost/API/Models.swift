@@ -85,12 +85,48 @@ struct Post: Codable, Identifiable, Hashable {
     let results: [String: PlatformResult]
     let createdAt: Date
     let publishedAt: Date?
+    var createdBy: String? = nil
+    var editedBy: String? = nil
 
     func result(_ p: Platform) -> PlatformResult? { results[p.rawValue] }
 
     var thumbData: Data? { thumb.flatMap { Data(base64Encoded: $0) } }
 
     var isEditable: Bool { status == .scheduled || status == .failed }
+}
+
+enum Role: String, Codable, CaseIterable, Identifiable {
+    case admin, editor, viewer
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .admin: "Власник"
+        case .editor: "Редактор"
+        case .viewer: "Перегляд"
+        }
+    }
+    var hint: String {
+        switch self {
+        case .admin: "Усе, включно з акаунтами і командою"
+        case .editor: "Створює, змінює і видаляє публікації"
+        case .viewer: "Лише бачить чергу й історію"
+        }
+    }
+}
+
+/// Who is signed in on this phone.
+struct Me: Codable, Hashable {
+    let name: String
+    let role: Role
+    var canEdit: Bool { role != .viewer }
+    var isAdmin: Bool { role == .admin }
+}
+
+struct Member: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let role: Role
+    let createdAt: Date
 }
 
 struct Account: Codable, Hashable {

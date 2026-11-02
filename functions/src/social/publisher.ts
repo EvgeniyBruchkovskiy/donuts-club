@@ -1,5 +1,5 @@
 import type { AccountApi, PublishApi } from "./meta.js";
-import { PLATFORMS, SMSG, type Accounts, type Platform, type PlatformResult, type SocialAccount, type SocialPost } from "./model.js";
+import { PLATFORMS, SMSG, type Accounts, type Platform, type PlatformResult, type SocialAccount, type SocialPost, type TeamMember } from "./model.js";
 
 export interface SocialStore {
   getAccounts(): Promise<Accounts>;
@@ -16,6 +16,9 @@ export interface SocialStore {
    * resolves the written post (null when skipped, deleted or missing). Errors thrown by `fn` propagate.
    */
   mutatePost(id: string, fn: (p: SocialPost | null) => SocialPost | "delete" | null): Promise<SocialPost | null>;
+  getTeam(): Promise<TeamMember[]>;
+  /** Transactional read-modify-write of the whole team; errors thrown by `fn` propagate. */
+  mutateTeam(fn: (t: TeamMember[]) => TeamMember[]): Promise<TeamMember[]>;
 }
 
 export interface MediaStore {

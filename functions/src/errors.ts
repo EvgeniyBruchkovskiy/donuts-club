@@ -1,7 +1,7 @@
 /** Errors the callable layer turns into HttpsError with a Ukrainian message for the UI. */
 export class UserError extends Error {
   constructor(
-    readonly code: "invalid-argument" | "failed-precondition" | "resource-exhausted" | "unavailable" | "not-found",
+    readonly code: "invalid-argument" | "failed-precondition" | "resource-exhausted" | "unavailable" | "not-found" | "permission-denied",
     message: string,
   ) {
     super(message);

@@ -138,7 +138,7 @@ export interface FeedbackList {
 
 export type StaffResult = { ok: true } | FeedbackList;
 
-function samePin(given: string, expected: string): boolean {
+export function samePin(given: string, expected: string): boolean {
   const a = createHash("sha256").update(given).digest();
   const b = createHash("sha256").update(expected).digest();
   return timingSafeEqual(a, b);
@@ -147,10 +147,10 @@ function samePin(given: string, expected: string): boolean {
 const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
 
 /**
- * Throws unless `given` is the PIN. Wrong PINs are counted per IP; after 8 in 15 minutes even the
- * right PIN is refused until the window passes. An unset secret refuses everyone.
+ * Resolves who `given` belongs to (`match` returns null for a wrong PIN). Wrong PINs are counted per IP;
+ * after 8 in 15 minutes even a right PIN is refused until the window passes.
  */
-export async function pinGate(kind: "staffFail" | "socialFail", given: unknown, pin: string, ip: string, deps: FeedbackDeps): Promise<void> {
+export async function pinGate<T>(kind: "staffFail" | "socialFail", given: unknown, match: (pin: string) => T | null | Promise<T | null>, ip: string, deps: FeedbackDeps): Promise<T> {
   const now = deps.now();
   const { limit: max, windowMs } = RATE[kind];
   const locked = !(await deps.store.hitRateLimit(`${kind}:${ip}`, (prev) => {
@@ -158,11 +158,13 @@ export async function pinGate(kind: "staffFail" | "socialFail", given: unknown, 
     return { allowed: fresh || prev.count < max, next: prev ?? { windowStart: now.getTime(), count: 0 } };
   }));
   if (locked) throw new UserError("resource-exhausted", MSG.staffLocked);
-  if (!pin || typeof given !== "string" || !samePin(given, pin)) {
+  const who = typeof given === "string" && given ? await match(given) : null;
+  if (who === null) {
     await limit(deps.store, ip, kind, now);
     deps.log("warn", `${kind}: wrong pin`, { ip });
     throw new UserError("failed-precondition", MSG.badPin);
   }
+  return who;
 }
 
 /**
@@ -171,7 +173,8 @@ export async function pinGate(kind: "staffFail" | "socialFail", given: unknown, 
 export async function staffAction(raw: unknown, ip: string, pin: string, deps: FeedbackDeps): Promise<StaffResult> {
   const now = deps.now();
   const r = (raw ?? {}) as Record<string, unknown>;
-  await pinGate("staffFail", r.pin, pin, ip, deps);
+  // An unset secret refuses everyone.
+  await pinGate("staffFail", r.pin, (g) => (pin && samePin(g, pin) ? true : null), ip, deps);
 
   switch (r.action) {
     case "login":

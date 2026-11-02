@@ -10,6 +10,11 @@ enum DemoData {
         threads: Account(username: "donutsclub.krop", expiresAt: nil, refreshError: nil)
     )
 
+    static let team = [
+        Member(id: "a1", name: "Оля", role: .editor, createdAt: .now),
+        Member(id: "a2", name: "Максим", role: .viewer, createdAt: .now),
+    ]
+
     static var posts: [Post] {
         let cal = Calendar.current
         func at(_ day: Int, _ h: Int, _ m: Int = 0) -> Date {
@@ -18,7 +23,8 @@ enum DemoData {
         func post(_ id: String, _ kind: PostKind, _ platforms: [Platform], _ caption: String, _ when: Date, _ status: PostStatus,
                   results: [String: PlatformResult] = [:], count: Int = 1, threads: String? = nil) -> Post {
             Post(id: id, kind: kind, platforms: platforms, caption: caption, threadsText: threads, mediaCount: count, thumb: nil,
-                 scheduledAt: when, status: status, results: results, createdAt: .now, publishedAt: status == .published ? when : nil)
+                 scheduledAt: when, status: status, results: results, createdAt: .now, publishedAt: status == .published ? when : nil,
+                 createdBy: "Оля", editedBy: id == "2" ? "Власник" : nil)
         }
         let ok = PlatformResult(state: .published, permalink: "https://www.instagram.com/p/demo/", error: nil)
         return [

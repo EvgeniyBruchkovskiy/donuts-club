@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		12CA998F8997F7D7B9CF1CBE /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8E8AD3A9A0EFD64EEB7DB9 /* LoginView.swift */; };
 		14F52373CD7C408BD1173A12 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9B9068D2CB9133107F969798 /* Assets.xcassets */; };
+		32178378130E94266EDDFAEC /* TeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB54133DDAFED13E354411E /* TeamView.swift */; };
 		35788AA9E2B62783B28FD5C7 /* DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BC8C3C289D2CA489E1E0741 /* DemoData.swift */; };
 		4A911DB2153D25270ED3C6D2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121DD41F8AB663D63E86BE2C /* SettingsView.swift */; };
 		503951740A631F4AFAAC0EBA /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0371216E93647D3524752DAF /* RootView.swift */; };
@@ -39,6 +40,7 @@
 		D12753B1D9E23A82B9DEE460 /* MediaFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFile.swift; sourceTree = "<group>"; };
 		DC75C71989DF5588CA0A88B6 /* PostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailView.swift; sourceTree = "<group>"; };
 		F60DC6CE637CE2D93B969045 /* DonutsPost.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DonutsPost.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFB54133DDAFED13E354411E /* TeamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -90,6 +92,7 @@
 				223EC746262ADFA3D8CACEFA /* PostListViews.swift */,
 				0371216E93647D3524752DAF /* RootView.swift */,
 				121DD41F8AB663D63E86BE2C /* SettingsView.swift */,
+				FFB54133DDAFED13E354411E /* TeamView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -195,6 +198,7 @@
 				503951740A631F4AFAAC0EBA /* RootView.swift in Sources */,
 				4A911DB2153D25270ED3C6D2 /* SettingsView.swift in Sources */,
 				899746127266DA0CF033040C /* SocialAPI.swift in Sources */,
+				32178378130E94266EDDFAEC /* TeamView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,7 +240,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J9LW2QV3T6;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -318,7 +322,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = J9LW2QV3T6;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
