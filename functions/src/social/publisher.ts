@@ -179,10 +179,11 @@ export async function refreshTokens(deps: SocialDeps): Promise<void> {
     const a = accounts[p];
     if (!a || now.getTime() - a.refreshedAt.getTime() < TIMING.refreshEveryMs) continue;
     try {
-      const r = await deps.accountApi(p).refresh(a.token);
+      const r = await deps.accountApi(p).refresh(a.token, a.host);
       await deps.social.setAccount(p, {
         userId: a.userId,
         username: a.username,
+        ...(a.host ? { host: a.host } : {}),
         connectedAt: a.connectedAt,
         token: r.token,
         refreshedAt: now,

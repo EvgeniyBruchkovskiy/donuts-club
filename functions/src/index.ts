@@ -259,7 +259,7 @@ function socialDeps(): SocialDeps {
   return {
     social: new FirestoreSocialStore(getFirestore()),
     media: new BucketMediaStore(getStorage().bucket(bucket)),
-    publishApi: (p, a) => (p === "instagram" ? instagramApi : threadsApi)(a.userId, a.token, fetch),
+    publishApi: (p, a) => (p === "instagram" ? instagramApi(a.userId, a.token, fetch, a.host) : threadsApi(a.userId, a.token, fetch)),
     accountApi: (p) => accountApi(p, fetch),
     now: () => new Date(),
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),

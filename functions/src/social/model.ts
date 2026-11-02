@@ -55,6 +55,8 @@ export interface SocialAccount {
   /** The id publishing calls go to (Instagram: professional account user_id; Threads: user id). */
   userId: string;
   username: string;
+  /** Instagram only: which Graph host the token works on (absent = guessed from the token). */
+  host?: "instagram" | "facebook";
   connectedAt: Date;
   refreshedAt: Date;
   expiresAt?: Date;
