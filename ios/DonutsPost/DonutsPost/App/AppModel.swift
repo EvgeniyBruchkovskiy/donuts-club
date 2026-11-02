@@ -187,9 +187,9 @@ final class AppModel {
         posts.removeAll { $0.id == post.id }
     }
 
-    func connect(_ platform: Platform, token: String) async throws {
+    func connect(_ platform: Platform, token: String, accountId: String? = nil) async throws {
         guard let api else { return }
-        accounts = try await api.connect(platform, token: token)
+        accounts = try await api.connect(platform, token: token, accountId: accountId)
     }
 
     func disconnect(_ platform: Platform) async throws {

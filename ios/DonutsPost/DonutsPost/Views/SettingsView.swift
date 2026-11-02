@@ -100,6 +100,7 @@ struct ConnectView: View {
     @Environment(\.dismiss) private var dismiss
     let platform: Platform
     @State private var token = ""
+    @State private var accountId = ""
     @State private var busy = false
     @State private var error: String?
 
@@ -129,6 +130,17 @@ struct ConnectView: View {
                     }
                 } header: {
                     Text("Токен доступу \(platform.title)")
+                }
+                if platform == .instagram {
+                    Section {
+                        TextField("Напр. 17841446914255549", text: $accountId)
+                            .keyboardType(.numberPad)
+                            .font(.footnote.monospaced())
+                    } header: {
+                        Text("ID акаунта Instagram")
+                    } footer: {
+                        Text("Число під назвою акаунта в Meta for Developers. Потрібне для токенів, що починаються з EAA.")
+                    }
                 }
                 if let error {
                     Section { Text(error).foregroundStyle(.red).font(.footnote) }
@@ -169,7 +181,8 @@ struct ConnectView: View {
         error = nil
         Task {
             do {
-                try await model.connect(platform, token: token.trimmingCharacters(in: .whitespacesAndNewlines))
+                try await model.connect(platform, token: token.trimmingCharacters(in: .whitespacesAndNewlines),
+                                        accountId: accountId.trimmingCharacters(in: .whitespacesAndNewlines))
                 dismiss()
             } catch {
                 self.error = error.localizedDescription

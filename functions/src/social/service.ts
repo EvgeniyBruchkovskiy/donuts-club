@@ -193,12 +193,13 @@ export async function socialAction(raw: unknown, ip: string, pin: string, deps: 
       if (!PLATFORMS.includes(platform)) throw bad(SMSG.badPlatforms);
       const token = typeof r.token === "string" ? r.token.trim() : "";
       if (!TOKEN_RE.test(token)) throw bad(SMSG.badToken);
+      const accountId = typeof r.accountId === "string" && /^\d{5,25}$/.test(r.accountId.trim()) ? r.accountId.trim() : undefined;
       let me: { userId: string; username: string };
       try {
-        me = await deps.accountApi(platform).me(token);
+        me = await deps.accountApi(platform).me(token, accountId);
       } catch (e) {
         deps.log("warn", "social: token rejected", { platform, error: e instanceof MetaError ? e.message : "unknown" });
-        throw new UserError("failed-precondition", SMSG.badToken);
+        throw new UserError("failed-precondition", e instanceof MetaError && !accountId && token.startsWith("EAA") ? SMSG.needAccountId : SMSG.badToken);
       }
       await deps.social.setAccount(platform, { token, userId: me.userId, username: me.username, connectedAt: now, refreshedAt: now });
       deps.log("info", "social: account connected", { platform, username: me.username });

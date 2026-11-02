@@ -38,7 +38,8 @@ export const igHostOf = (token: string): IgHost => (token.startsWith("EAA") ? "f
 const FB = "https://graph.facebook.com";
 
 export interface AccountApi {
-  me(token: string): Promise<{ userId: string; username: string; host?: IgHost }>;
+  /** `accountId`: the Instagram account id from the dashboard, for Facebook tokens that cannot name it. */
+  me(token: string, accountId?: string): Promise<{ userId: string; username: string; host?: IgHost }>;
   /** Extends a long-lived token by 60 days (it must be at least a day old). */
   refresh(token: string): Promise<{ token: string; expiresInSec?: number }>;
 }
@@ -72,7 +73,11 @@ export function accountApi(platform: Platform, fetchFn: Fetch): AccountApi {
   const host = HOSTS[platform];
   const v = VERSIONS[platform];
   return {
-    async me(token) {
+    async me(token, accountId) {
+      if (platform === "instagram" && igHostOf(token) === "facebook" && accountId) {
+        const b = await call(fetchFn, "GET", `${FB}/${v}/${accountId}`, { fields: "id,username", access_token: token });
+        return { userId: String(b.id), username: String(b.username ?? ""), host: "facebook" };
+      }
       if (platform === "instagram" && igHostOf(token) === "facebook") {
         // Unified-login tokens are issued for the Instagram account itself: /me is that account.
         const self = await call(fetchFn, "GET", `${FB}/${v}/me`, { fields: "id,username", access_token: token }).catch(() => null);

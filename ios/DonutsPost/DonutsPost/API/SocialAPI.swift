@@ -91,8 +91,10 @@ struct SocialAPI {
 
     func remove(id: String) async throws { _ = try await call("remove", ["id": id], as: OK.self) }
 
-    func connect(_ platform: Platform, token: String) async throws -> Accounts {
-        try await call("connect", ["platform": platform.rawValue, "token": token], as: LoginResult.self).accounts
+    func connect(_ platform: Platform, token: String, accountId: String? = nil) async throws -> Accounts {
+        var p: [String: Any] = ["platform": platform.rawValue, "token": token]
+        if let accountId, !accountId.isEmpty { p["accountId"] = accountId }
+        return try await call("connect", p, as: LoginResult.self).accounts
     }
 
     func disconnect(_ platform: Platform) async throws -> Accounts {

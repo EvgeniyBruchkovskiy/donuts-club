@@ -474,6 +474,12 @@ describe("Instagram token kinds", async () => {
     expect(urls[0]).toMatch(/^https:\/\/graph\.instagram\.com\/v24\.0\/me\?/);
   });
 
+  it("checks a Facebook token against the account id given from the dashboard", async () => {
+    const { f, urls } = fake({ id: "17841446914255549", username: "donuts_club_krop" });
+    expect(await accountApi("instagram", f).me("EAAtoken-0123456789", "17841446914255549")).toEqual({ userId: "17841446914255549", username: "donuts_club_krop", host: "facebook" });
+    expect(urls[0]).toMatch(/^https:\/\/graph\.facebook\.com\/v24\.0\/17841446914255549\?fields=id%2Cusername/);
+  });
+
   it("explains a Facebook token without an Instagram account", async () => {
     const { f } = fake({ data: [{ id: "page1" }] });
     await expect(accountApi("instagram", f).me("EAAtoken-0123456789")).rejects.toThrow("професійного акаунта Instagram");
