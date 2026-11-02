@@ -16,6 +16,7 @@ export type FeedbackDeps = Pick<Deps, "store" | "now" | "log">;
 const RATE = {
   feedback: { limit: 5, windowMs: 3600_000 },
   staffFail: { limit: 8, windowMs: 15 * 60_000 },
+  socialFail: { limit: 8, windowMs: 15 * 60_000 },
 };
 
 export interface FeedbackInput {
@@ -146,23 +147,31 @@ function samePin(given: string, expected: string): boolean {
 const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
 
 /**
- * One callable for the staff page: `login` | `feedback` | `hide` (toggles a review on the site).
- * Wrong PINs are counted per IP; after 8 in 15 minutes even the right PIN is refused until the window passes.
+ * Throws unless `given` is the PIN. Wrong PINs are counted per IP; after 8 in 15 minutes even the
+ * right PIN is refused until the window passes. An unset secret refuses everyone.
  */
-export async function staffAction(raw: unknown, ip: string, pin: string, deps: FeedbackDeps): Promise<StaffResult> {
+export async function pinGate(kind: "staffFail" | "socialFail", given: unknown, pin: string, ip: string, deps: FeedbackDeps): Promise<void> {
   const now = deps.now();
-  const r = (raw ?? {}) as Record<string, unknown>;
-  const { limit: max, windowMs } = RATE.staffFail;
-  const locked = !(await deps.store.hitRateLimit(`staffFail:${ip}`, (prev) => {
+  const { limit: max, windowMs } = RATE[kind];
+  const locked = !(await deps.store.hitRateLimit(`${kind}:${ip}`, (prev) => {
     const fresh = !prev || now.getTime() - prev.windowStart >= windowMs;
     return { allowed: fresh || prev.count < max, next: prev ?? { windowStart: now.getTime(), count: 0 } };
   }));
   if (locked) throw new UserError("resource-exhausted", MSG.staffLocked);
-  if (!pin || typeof r.pin !== "string" || !samePin(r.pin, pin)) {
-    await limit(deps.store, ip, "staffFail", now);
-    deps.log("warn", "staff: wrong pin", { ip });
+  if (!pin || typeof given !== "string" || !samePin(given, pin)) {
+    await limit(deps.store, ip, kind, now);
+    deps.log("warn", `${kind}: wrong pin`, { ip });
     throw new UserError("failed-precondition", MSG.badPin);
   }
+}
+
+/**
+ * One callable for the staff page: `login` | `feedback` | `hide` (toggles a review on the site).
+ */
+export async function staffAction(raw: unknown, ip: string, pin: string, deps: FeedbackDeps): Promise<StaffResult> {
+  const now = deps.now();
+  const r = (raw ?? {}) as Record<string, unknown>;
+  await pinGate("staffFail", r.pin, pin, ip, deps);
 
   switch (r.action) {
     case "login":

@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { setGlobalOptions } from "firebase-functions/v2";
 import { HttpsError, onCall, onRequest, type CallableRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -13,6 +14,10 @@ import { PosterClient, PosterError } from "./poster/client.js";
 import { runBirthdayBonuses } from "./bonus/birthday.js";
 import { ipKey, publicReviews as publicReviewsImpl, staffAction as staffActionImpl, submitFeedback as submitFeedbackImpl, type FeedbackDeps } from "./feedback.js";
 import { registerMe as registerMeImpl } from "./register.js";
+import { BucketMediaStore, FirestoreSocialStore } from "./social/firestoreSocialStore.js";
+import { accountApi, instagramApi, threadsApi } from "./social/meta.js";
+import { runSocialTick, type SocialDeps } from "./social/publisher.js";
+import { socialAction as socialActionImpl } from "./social/service.js";
 import { buildPkpass, passImages, passJson, pushUpdates, wwdrPem, type AppleSigner } from "./wallet/apple.js";
 import { handleAppleRequest } from "./wallet/appleWebService.js";
 import { walletConfig } from "./wallet/config.js";
@@ -27,6 +32,8 @@ setGlobalOptions({ region: "europe-central2", maxInstances: 5 });
 const POSTER_TOKEN = defineSecret("POSTER_TOKEN");
 /** PIN of the barista page /staff (set with `firebase functions:secrets:set STAFF_PIN`). */
 const STAFF_PIN = defineSecret("STAFF_PIN");
+/** PIN of the «Donuts Post» iOS app (scheduled Instagram/Threads posts) — not the baristas' PIN. */
+const SOCIAL_PIN = defineSecret("SOCIAL_PIN");
 /** Apple Pass Type ID certificate and its key, PEM (docs/wallet-setup.md). */
 const APPLE_PASS_CERT = defineSecret("APPLE_PASS_CERT");
 const APPLE_PASS_KEY = defineSecret("APPLE_PASS_KEY");
@@ -244,5 +251,35 @@ export const birthdayBonuses = onSchedule(
   { schedule: "0 9 * * *", timeZone: "Europe/Kyiv", secrets: [POSTER_TOKEN], memory: "256MiB", timeoutSeconds: 300, retryCount: 0 },
   async () => {
     await runBirthdayBonuses(deps());
+  },
+);
+
+function socialDeps(): SocialDeps {
+  const bucket = process.env.SOCIAL_BUCKET || `${process.env.GCLOUD_PROJECT}-social`;
+  return {
+    social: new FirestoreSocialStore(getFirestore()),
+    media: new BucketMediaStore(getStorage().bucket(bucket)),
+    publishApi: (p, a) => (p === "instagram" ? instagramApi : threadsApi)(a.userId, a.token, fetch),
+    accountApi: (p) => accountApi(p, fetch),
+    now: () => new Date(),
+    sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+    log: (level, message, data) => logger[level](message, data),
+  };
+}
+
+/**
+ * «Donuts Post» iOS app (docs/social-setup.md): one PIN-protected callable. Native app — no App Check
+ * and no browser origins; the PIN with its per-IP lockout is the gate.
+ */
+export const socialAction = onCall({ secrets: [SOCIAL_PIN], cors: false, memory: "256MiB", timeoutSeconds: 60 }, (req) =>
+  run("socialAction", () => socialActionImpl(req.data, clientIp(req), SOCIAL_PIN.value(), { ...socialDeps(), store: new FirestoreStore(getFirestore()) })),
+);
+
+/** Every minute: publishes due posts to Instagram and Threads; hourly also extends the Meta tokens. */
+export const socialPublisher = onSchedule(
+  { schedule: "* * * * *", timeZone: "Europe/Kyiv", memory: "256MiB", timeoutSeconds: 300, retryCount: 0, maxInstances: 1 },
+  async (event) => {
+    const at = new Date(event.scheduleTime);
+    await runSocialTick(socialDeps(), new Date(Date.now() + 240_000), at.getUTCMinutes() === 7);
   },
 );
