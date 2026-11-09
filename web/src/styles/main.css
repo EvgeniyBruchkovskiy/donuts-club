@@ -372,7 +372,9 @@ footer{background:var(--choco);color:#FFE9D8;padding:60px 0 30px;position:relati
   .eyebrow{font-size:12px;letter-spacing:1.4px;padding:7px 14px}
   /* hero */
   .hero{padding:34px 0 30px}
-  .hero .eyebrow{white-space:nowrap;font-size:11px;letter-spacing:1px}
+  .hero-grid>*{min-width:0}
+  .hero .eyebrow{max-width:100%;font-size:11px;letter-spacing:.3px;padding:7px 12px;line-height:1.4}
+  .hero .eb-more{display:none}
   .hero h1{font-size:44px;line-height:1.04}
   .hero p.lead{font-size:16px;margin:18px auto 24px}
   .hero-cta{flex-direction:column;align-items:center;gap:10px}
