@@ -4,7 +4,7 @@ import { connect } from "node:http2";
 import { zipSync } from "fflate";
 import forge from "node-forge";
 import { BRAND, type WalletConfig } from "./config.js";
-import { prettyCardNumber, programLine, type PassData } from "./passData.js";
+import { menuUrl, prettyCardNumber, programLine, wifiLine, type PassData } from "./passData.js";
 import type { PushResult } from "./service.js";
 
 /** Pass Type ID certificate + its private key (PEM, secrets APPLE_PASS_CERT / APPLE_PASS_KEY). */
@@ -48,10 +48,14 @@ export function passJson(cfg: WalletConfig, serial: string, authToken: string, d
     labelColor: BRAND.apple.label,
     sharingProhibited: true,
     barcodes: [{ format: "PKBarcodeFormatQR", message: d.cardNumber, messageEncoding: "iso-8859-1", altText: prettyCardNumber(d.cardNumber) }],
+    // Machine-readable Wi-Fi for Wallet; the back field below shows the same network as text.
+    semantics: { wifiAccess: [{ ssid: BRAND.wifi.ssid, password: BRAND.wifi.password }] },
     storeCard: {
       primaryFields: [],
       // Name and cashback are drawn into the strip too (strip.ts); the back keeps them as text.
       backFields: [
+        { key: "wifi", label: "Wi-Fi у кав'ярні", value: wifiLine() },
+        { key: "menu", label: "Меню", value: menuUrl(cfg.siteUrl), attributedValue: `<a href="${menuUrl(cfg.siteUrl)}">Дивитися меню</a>` },
         balance,
         { key: "name", label: "Учасник клубу", value: d.name || "—" },
         { key: "how", label: "Як користуватися", value: "Покажіть QR-код на касі — бонуси нарахуються автоматично. 1 бонус = 1 ₴, бонусами можна оплатити до 50% чеку. На товари за акцією бонуси не нараховуються." },

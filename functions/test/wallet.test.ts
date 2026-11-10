@@ -60,8 +60,9 @@ describe("apple pass", () => {
   it("keeps the balance as a back field with a change message and the card number in the QR", () => {
     const p = passJson(cfg, "s1", "tok", toPassData(client({ card_number: PHONE })));
     expect(p.storeCard.primaryFields).toEqual([]);
-    expect(p.storeCard.backFields[0]).toMatchObject({ key: "balance", value: 53.2, currencyCode: "UAH" });
-    expect(p.storeCard.backFields[0]).toHaveProperty("changeMessage", "Бонусів на рахунку: %@");
+    const balance = p.storeCard.backFields.find((f) => f.key === "balance");
+    expect(balance).toMatchObject({ value: 53.2, currencyCode: "UAH" });
+    expect(balance).toHaveProperty("changeMessage", "Бонусів на рахунку: %@");
     expect(p).not.toHaveProperty("logoText");
     expect(p.storeCard).not.toHaveProperty("secondaryFields");
     expect(p.storeCard.backFields.find((f) => f.key === "name")?.value).toBe("Олена");
@@ -72,7 +73,15 @@ describe("apple pass", () => {
 
   it("shows the discount for discount-program clients", () => {
     const p = passJson(cfg, "s1", "tok", toPassData(client({ loyalty_type: "2", client_groups_discount: "5" })));
-    expect(p.storeCard.backFields[0]).toMatchObject({ key: "balance", label: "Ваша знижка", value: "5%" });
+    expect(p.storeCard.backFields.find((f) => f.key === "balance")).toMatchObject({ label: "Ваша знижка", value: "5%" });
+  });
+
+  it("puts the café Wi-Fi and the menu link first on the back, and the Wi-Fi in semantics", () => {
+    const p = passJson(cfg, "s1", "tok", toPassData(client()));
+    expect(p.storeCard.backFields.slice(0, 2).map((f) => f.key)).toEqual(["wifi", "menu"]);
+    expect(p.storeCard.backFields[0].value).toBe("Мережа: DONUTS.CLUB\nПароль: 123456789$");
+    expect(p.storeCard.backFields[1]).toMatchObject({ value: "https://donutsclub.kr.ua/#menu" });
+    expect(p.semantics.wifiAccess).toEqual([{ ssid: "DONUTS.CLUB", password: "123456789$" }]);
   });
 
   it("builds a zip whose manifest hashes every file and whose signature is a detached PKCS#7 by the pass certificate", () => {
@@ -158,6 +167,13 @@ describe("google pass", () => {
     expect(o.classId).toBe("3388000000000000000.donuts_club");
     expect(o.loyaltyPoints.balance).toEqual({ money: { micros: 53_200_000, currencyCode: "UAH" } });
     expect(o.barcode).toMatchObject({ type: "QR_CODE", value: PHONE });
+  });
+
+  it("shows the café Wi-Fi and links to the menu", () => {
+    const { cfg } = makeWalletDeps();
+    const o = loyaltyObject(cfg, "abc", toPassData(client()));
+    expect(o.textModulesData[0]).toEqual({ id: "wifi", header: "Wi-Fi у кав'ярні", body: "Мережа: DONUTS.CLUB\nПароль: 123456789$" });
+    expect(o.linksModuleData.uris[0]).toMatchObject({ id: "menu", uri: "https://donutsclub.kr.ua/#menu" });
   });
 });
 

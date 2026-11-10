@@ -30,6 +30,8 @@ export const BRAND = {
   name: "DONUTS CLUB",
   program: "Клуб DONUTS",
   address: "м. Кропивницький, вул. Гоголя, 80ж",
+  /** Guest Wi-Fi in the café, printed on the back of every card. */
+  wifi: { ssid: "DONUTS.CLUB", password: "123456789$" },
   /** Cream background, chocolate text, pink labels — the site's palette. */
   apple: { background: "rgb(255,246,236)", foreground: "rgb(59,36,21)", label: "rgb(255,78,147)" },
   /** Same cream as the Apple card; Google picks dark text for it. */

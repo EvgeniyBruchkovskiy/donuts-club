@@ -1,6 +1,6 @@
 import { createSign } from "node:crypto";
 import { BRAND, type WalletConfig } from "./config.js";
-import { prettyCardNumber, programLine, type PassData } from "./passData.js";
+import { menuUrl, prettyCardNumber, programLine, wifiLine, type PassData } from "./passData.js";
 
 const API = "https://walletobjects.googleapis.com/walletobjects/v1";
 const SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer";
@@ -59,11 +59,17 @@ export function loyaltyObject(cfg: WalletConfig, serial: string, d: PassData) {
     loyaltyPoints: points,
     barcode: { type: "QR_CODE", value: d.cardNumber, alternateText: prettyCardNumber(d.cardNumber) },
     textModulesData: [
+      { id: "wifi", header: "Wi-Fi у кав'ярні", body: wifiLine() },
       { id: "program", header: "Ваша програма", body: programLine(d) },
       { id: "how", header: "Як користуватися", body: "Покажіть QR-код на касі — бонуси нарахуються автоматично. 1 бонус = 1 ₴, ними можна оплатити до 50% чеку." },
       { id: "address", header: "Адреса", body: BRAND.address },
     ],
-    linksModuleData: { uris: [{ uri: `${cfg.siteUrl}/account`, description: "Мій кабінет: історія покупок", id: "cabinet" }] },
+    linksModuleData: {
+      uris: [
+        { uri: menuUrl(cfg.siteUrl), description: "Меню", id: "menu" },
+        { uri: `${cfg.siteUrl}/account`, description: "Мій кабінет: історія покупок", id: "cabinet" },
+      ],
+    },
   };
 }
 

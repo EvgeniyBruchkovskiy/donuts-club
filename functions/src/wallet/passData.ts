@@ -1,7 +1,8 @@
 import type { PosterClientRecord } from "../poster/types.js";
+import { BRAND } from "./config.js";
 
 /** Bump when the card's look changes: cards issued with an older design then count as changed and get pushed. */
-export const PASS_DESIGN = 5;
+export const PASS_DESIGN = 6;
 
 /** Everything a wallet card shows — the same for Apple and Google. */
 export interface PassData {
@@ -30,6 +31,10 @@ export function toPassData(c: PosterClientRecord): PassData {
 /** Same data → same card; used to skip pushes when nothing visible changed. */
 export const sameCard = (a: PassData, b: PassData) =>
   a.name === b.name && a.bonusUah === b.bonusUah && a.program === b.program && a.percent === b.percent && a.cardNumber === b.cardNumber && a.design === b.design;
+
+export const wifiLine = () => `Мережа: ${BRAND.wifi.ssid}\nПароль: ${BRAND.wifi.password}`;
+
+export const menuUrl = (siteUrl: string) => `${siteUrl}/#menu`;
 
 export const programLine = (d: PassData) => (d.program === "discount" ? `Знижка ${d.percent}%` : `${d.percent}% бонусами з покупок`);
 
